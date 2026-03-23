@@ -39,6 +39,7 @@ class DataStoreJigsawProgressStore(
             placedPieceIds = progressPayload.placedPieceIds,
             boardPiecePositions = progressPayload.boardPiecePositions,
             pieceLinks = progressPayload.pieceLinks,
+            pieceOrder = progressPayload.pieceOrder,
             updatedAtEpochMillis = updatedAt,
         )
     }
@@ -114,6 +115,7 @@ internal data class ProgressPayload(
     val placedPieceIds: Set<Int>,
     val boardPiecePositions: List<SavedBoardPiecePosition>,
     val pieceLinks: Set<SavedPieceLink>,
+    val pieceOrder: List<Int>,
 )
 
 internal fun encodeProgressPayloadForTest(progress: JigsawProgress): String = encodeProgressPayload(progress)
@@ -128,6 +130,8 @@ private fun encodeProgressPayload(progress: JigsawProgress): String = buildStrin
     append(encodeBoardPiecePositions(progress.boardPiecePositions))
     append('|')
     append(encodePieceLinks(progress.pieceLinks))
+    append('|')
+    append(encodePieceOrder(progress.pieceOrder))
 }
 
 private fun decodeProgressPayload(rawValue: String?): ProgressPayload {
@@ -136,13 +140,15 @@ private fun decodeProgressPayload(rawValue: String?): ProgressPayload {
             placedPieceIds = emptySet(),
             boardPiecePositions = emptyList(),
             pieceLinks = emptySet(),
+            pieceOrder = emptyList(),
         )
     }
-    if (!rawValue.startsWith("$PROGRESS_FORMAT_VERSION|")) {
+    if (!rawValue.startsWith("$PROGRESS_FORMAT_VERSION|") && !rawValue.startsWith("$PREVIOUS_PROGRESS_FORMAT_VERSION|")) {
         return ProgressPayload(
             placedPieceIds = decodePieces(rawValue),
             boardPiecePositions = emptyList(),
             pieceLinks = emptySet(),
+            pieceOrder = emptyList(),
         )
     }
 
@@ -151,6 +157,11 @@ private fun decodeProgressPayload(rawValue: String?): ProgressPayload {
         placedPieceIds = decodePieces(parts.getOrNull(1)),
         boardPiecePositions = decodeBoardPiecePositions(parts.getOrNull(2)),
         pieceLinks = decodePieceLinks(parts.getOrNull(3)),
+        pieceOrder = if (parts.firstOrNull() == PROGRESS_FORMAT_VERSION) {
+            decodePieceOrder(parts.getOrNull(4))
+        } else {
+            emptyList()
+        },
     )
 }
 
@@ -205,4 +216,12 @@ internal fun decodePieceLinks(rawValue: String?): Set<SavedPieceLink> = rawValue
     ?.toSet()
     ?: emptySet()
 
-private const val PROGRESS_FORMAT_VERSION = "v2"
+internal fun encodePieceOrder(pieceOrder: List<Int>): String = pieceOrder.joinToString(separator = ",")
+
+internal fun decodePieceOrder(rawValue: String?): List<Int> = rawValue
+    ?.split(',')
+    ?.mapNotNull(String::toIntOrNull)
+    ?: emptyList()
+
+private const val PREVIOUS_PROGRESS_FORMAT_VERSION = "v2"
+private const val PROGRESS_FORMAT_VERSION = "v3"

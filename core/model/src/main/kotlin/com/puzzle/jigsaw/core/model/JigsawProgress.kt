@@ -17,6 +17,7 @@ data class JigsawProgress(
     val placedPieceIds: Set<Int>,
     val boardPiecePositions: List<SavedBoardPiecePosition> = emptyList(),
     val pieceLinks: Set<SavedPieceLink> = emptySet(),
+    val pieceOrder: List<Int> = emptyList(),
     val updatedAtEpochMillis: Long,
 ) {
     val completionRatio: Float =

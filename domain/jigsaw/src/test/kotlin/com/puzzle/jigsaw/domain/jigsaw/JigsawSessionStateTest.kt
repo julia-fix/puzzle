@@ -190,4 +190,51 @@ class JigsawSessionStateTest {
         )
         assertEquals(setOf(SavedPieceLink(firstPieceId = 1, secondPieceId = 2)), progress.pieceLinks)
     }
+
+    @Test
+    fun `toProgress includes current piece order`() {
+        val pieceOrder = listOf(2, 1, 0) + (3 until option.totalPieces)
+        val state = JigsawSessionState(
+            image = image,
+            pieceCount = option,
+            placedPieceIds = emptySet(),
+            boardPiecePositions = emptyMap(),
+            pieceLinks = emptySet(),
+            pieceOrder = pieceOrder,
+        )
+
+        val progress = state.toProgress(updatedAtEpochMillis = 55L)
+
+        assertEquals(pieceOrder, progress.pieceOrder)
+    }
+
+    @Test
+    fun `createSessionState restores saved piece order when valid`() {
+        val pieceOrder = listOf(2, 1, 0) + (3 until option.totalPieces)
+        val progress = JigsawProgress(
+            imageId = image.id,
+            pieceCount = option.totalPieces,
+            placedPieceIds = emptySet(),
+            pieceOrder = pieceOrder,
+            updatedAtEpochMillis = 1L,
+        )
+
+        val session = createSessionState(image, option, progress)
+
+        assertEquals(pieceOrder, session.pieceOrder)
+    }
+
+    @Test
+    fun `reorderTrayPieces moves a tray piece to the requested remaining index`() {
+        val initial = createSessionState(image, option, progress = null)
+        val ordered = initial.copy(pieceOrder = (0 until option.totalPieces).toList())
+
+        val reordered = reorderTrayPieces(
+            state = ordered,
+            movedPieceIds = setOf(1),
+            targetIndex = 3,
+        )
+
+        assertEquals(listOf(0, 2, 3, 1), reordered.remainingPieceIds.take(4))
+    }
 }

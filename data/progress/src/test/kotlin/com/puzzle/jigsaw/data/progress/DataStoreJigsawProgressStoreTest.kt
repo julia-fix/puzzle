@@ -20,6 +20,7 @@ class DataStoreJigsawProgressStoreTest {
             pieceLinks = setOf(
                 SavedPieceLink(firstPieceId = 3, secondPieceId = 8),
             ),
+            pieceOrder = listOf(7, 4, 0, 3, 8),
             updatedAtEpochMillis = 99L,
         )
 
@@ -28,6 +29,7 @@ class DataStoreJigsawProgressStoreTest {
         assertEquals(progress.placedPieceIds, decoded.placedPieceIds)
         assertEquals(progress.boardPiecePositions, decoded.boardPiecePositions)
         assertEquals(progress.pieceLinks, decoded.pieceLinks)
+        assertEquals(progress.pieceOrder, decoded.pieceOrder)
     }
 
     @Test
@@ -37,6 +39,17 @@ class DataStoreJigsawProgressStoreTest {
         assertEquals(setOf(1, 4, 7), decoded.placedPieceIds)
         assertEquals(emptyList<SavedBoardPiecePosition>(), decoded.boardPiecePositions)
         assertEquals(emptySet<SavedPieceLink>(), decoded.pieceLinks)
+        assertEquals(emptyList<Int>(), decoded.pieceOrder)
+    }
+
+    @Test
+    fun `decode progress payload supports previous v2 format without piece order`() {
+        val decoded = decodeProgressPayloadForTest("v2|1,4,7|3,1.0,2.0|3,8")
+
+        assertEquals(setOf(1, 4, 7), decoded.placedPieceIds)
+        assertEquals(listOf(SavedBoardPiecePosition(pieceId = 3, x = 1.0f, y = 2.0f)), decoded.boardPiecePositions)
+        assertEquals(setOf(SavedPieceLink(firstPieceId = 3, secondPieceId = 8)), decoded.pieceLinks)
+        assertEquals(emptyList<Int>(), decoded.pieceOrder)
     }
 
     @Test

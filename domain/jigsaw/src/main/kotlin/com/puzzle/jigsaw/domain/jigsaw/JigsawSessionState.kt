@@ -63,6 +63,7 @@ data class JigsawSessionState(
                 secondPieceId = link.secondPieceId,
             )
         },
+        pieceOrder = pieceOrder,
         updatedAtEpochMillis = updatedAtEpochMillis,
     )
 }
@@ -110,14 +111,53 @@ fun createSessionState(
         ?.toSet()
         ?: emptySet()
 
+    val defaultPieceOrder = createPieceOrder(imageId = image.id, totalPieces = pieceCount.totalPieces)
+    val pieceOrder = progress
+        ?.pieceOrder
+        ?.takeIf { savedOrder ->
+            savedOrder.size == pieceCount.totalPieces &&
+                savedOrder.toSet() == allowedPieceIds
+        }
+        ?: defaultPieceOrder
+
     return JigsawSessionState(
         image = image,
         pieceCount = pieceCount,
         placedPieceIds = placedPieces,
         boardPiecePositions = boardPiecePositions,
         pieceLinks = pieceLinks,
-        pieceOrder = createPieceOrder(imageId = image.id, totalPieces = pieceCount.totalPieces),
+        pieceOrder = pieceOrder,
     )
+}
+
+fun reorderTrayPieces(
+    state: JigsawSessionState,
+    movedPieceIds: Set<Int>,
+    targetIndex: Int,
+): JigsawSessionState {
+    if (movedPieceIds.isEmpty()) return state
+
+    val remainingPieceIds = state.remainingPieceIds
+    val movedBlock = remainingPieceIds.filter { it in movedPieceIds }
+    if (movedBlock.isEmpty()) return state
+
+    val stableRemaining = remainingPieceIds.filterNot { it in movedPieceIds }
+    val insertionIndex = targetIndex.coerceIn(0, stableRemaining.size)
+    val reorderedRemaining = buildList(remainingPieceIds.size) {
+        addAll(stableRemaining.take(insertionIndex))
+        addAll(movedBlock)
+        addAll(stableRemaining.drop(insertionIndex))
+    }
+    var reorderedRemainingIndex = 0
+    val reorderedPieceOrder = state.pieceOrder.map { pieceId ->
+        if (pieceId in remainingPieceIds) {
+            reorderedRemaining[reorderedRemainingIndex++]
+        } else {
+            pieceId
+        }
+    }
+
+    return state.copy(pieceOrder = reorderedPieceOrder)
 }
 
 fun movePieceCluster(

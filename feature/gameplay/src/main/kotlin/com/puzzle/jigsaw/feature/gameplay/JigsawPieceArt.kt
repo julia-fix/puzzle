@@ -232,7 +232,7 @@ private data class JigsawPalette(
     val snapHighlight: Color,
 )
 
-private data class LoosePieceBounds(
+internal data class LoosePieceBounds(
     val width: Float,
     val height: Float,
     val leftExtension: Float,
@@ -244,7 +244,7 @@ private data class JigsawBoardPaths(
     val outlinePath: Path,
 )
 
-private fun calculateLoosePieceBounds(
+internal fun calculateLoosePieceBounds(
     piece: JigsawPieceLayout,
     cellWidth: Float,
     cellHeight: Float,
@@ -258,6 +258,30 @@ private fun calculateLoosePieceBounds(
         height = cellHeight + topExtension + bottomExtension,
         leftExtension = leftExtension,
         topExtension = topExtension,
+    )
+}
+
+internal fun createLoosePieceLocalPath(
+    piece: JigsawPieceLayout,
+    pieceCount: PieceCountOption,
+    cellWidth: Float,
+    cellHeight: Float,
+): Path {
+    val bounds = calculateLoosePieceBounds(
+        piece = piece,
+        cellWidth = cellWidth,
+        cellHeight = cellHeight,
+    )
+    val boardLeft = bounds.leftExtension - (piece.column.toFloat() * cellWidth)
+    val boardTop = bounds.topExtension - (piece.row.toFloat() * cellHeight)
+    return createPiecePath(
+        piece = piece,
+        rows = pieceCount.rows,
+        columns = pieceCount.columns,
+        boardLeft = boardLeft,
+        boardTop = boardTop,
+        boardWidth = cellWidth * pieceCount.columns,
+        boardHeight = cellHeight * pieceCount.rows,
     )
 }
 

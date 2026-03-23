@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gameplay_title_in_progress">Assemble the puzzle</string>
+    <string name="gameplay_title_completed">Puzzle completed</string>
+    <string name="gameplay_progress_summary">%1$s • %2$d%% complete</string>
+    <string name="gameplay_reset">Reset</string>
+    <string name="gameplay_loose_pieces_title">Loose pieces</string>
+    <string name="gameplay_reset_dialog_title">Reset puzzle?</string>
+    <string name="gameplay_reset_dialog_message">Current progress for this puzzle size will be cleared.</string>
+    <string name="gameplay_reset_confirm">Reset</string>
+    <string name="gameplay_cancel">Cancel</string>
+
+    <plurals name="gameplay_piece_count">
+        <item quantity="one">%d piece</item>
+        <item quantity="other">%d pieces</item>
+    </plurals>
+
+    <plurals name="gameplay_pieces_left">
+        <item quantity="one">%d left</item>
+        <item quantity="other">%d left</item>
+    </plurals>
+</resources>

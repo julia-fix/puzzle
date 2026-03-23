@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gallery_title">Choose an image</string>
+    <string name="gallery_filter_all">All</string>
+    <string name="gallery_category_nature">Nature</string>
+    <string name="gallery_category_sunsets">Sunsets</string>
+    <string name="gallery_category_city">City</string>
+    <string name="gallery_category_featured">Featured</string>
+</resources>

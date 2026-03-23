@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.puzzle.jigsaw.core.designsystem.R
 
 @Composable
@@ -19,7 +20,7 @@ fun PuzzleBackButton(
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_caret_left_bold),
-            contentDescription = "Back",
+            contentDescription = stringResource(R.string.back_button),
             tint = MaterialTheme.colorScheme.onSurface,
         )
     }

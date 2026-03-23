@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Puzzle</string>
+    <string name="missing_argument_message">This screen could not be opened.</string>
 </resources>
-

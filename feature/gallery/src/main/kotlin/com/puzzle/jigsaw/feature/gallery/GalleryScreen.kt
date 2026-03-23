@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.puzzle.jigsaw.core.designsystem.components.PuzzleAssetImage
@@ -48,13 +49,12 @@ fun GalleryScreen(
     onImageSelected: (PuzzleImage) -> Unit,
 ) {
     val filters = remember(images) {
-        listOf(CategoryFilter(id = null, label = "All")) +
+        listOf(CategoryFilter(id = null)) +
             images
                 .distinctBy(PuzzleImage::categoryId)
                 .map { image ->
                     CategoryFilter(
                         id = image.categoryId,
-                        label = image.categoryName,
                     )
                 }
     }
@@ -85,7 +85,7 @@ fun GalleryScreen(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text(
-                        text = "Choose an image",
+                        text = stringResource(R.string.gallery_title),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                     )
@@ -114,7 +114,7 @@ fun GalleryScreen(
                                 selectedCategoryId = filter.id
                             },
                             label = {
-                                Text(filter.label)
+                                Text(categoryLabel(filter.id))
                             },
                         )
                     }
@@ -175,5 +175,14 @@ private fun ImageTile(
 
 private data class CategoryFilter(
     val id: String?,
-    val label: String,
 )
+
+@Composable
+private fun categoryLabel(categoryId: String?): String = when (categoryId) {
+    null -> stringResource(R.string.gallery_filter_all)
+    "nature" -> stringResource(R.string.gallery_category_nature)
+    "sunsets" -> stringResource(R.string.gallery_category_sunsets)
+    "city" -> stringResource(R.string.gallery_category_city)
+    "featured" -> stringResource(R.string.gallery_category_featured)
+    else -> categoryId
+}

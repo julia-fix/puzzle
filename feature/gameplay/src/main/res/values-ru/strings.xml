@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gameplay_title_in_progress">Соберите пазл</string>
+    <string name="gameplay_title_completed">Пазл собран</string>
+    <string name="gameplay_progress_summary">%1$s • %2$d%% собрано</string>
+    <string name="gameplay_reset">Сброс</string>
+    <string name="gameplay_loose_pieces_title">Детали</string>
+    <string name="gameplay_reset_dialog_title">Сбросить пазл?</string>
+    <string name="gameplay_reset_dialog_message">Текущий прогресс для этого размера пазла будет удалён.</string>
+    <string name="gameplay_reset_confirm">Сбросить</string>
+    <string name="gameplay_cancel">Отмена</string>
+
+    <plurals name="gameplay_piece_count">
+        <item quantity="one">%d часть</item>
+        <item quantity="few">%d части</item>
+        <item quantity="many">%d частей</item>
+        <item quantity="other">%d частей</item>
+    </plurals>
+
+    <plurals name="gameplay_pieces_left">
+        <item quantity="one">Осталась %d деталь</item>
+        <item quantity="few">Осталось %d детали</item>
+        <item quantity="many">Осталось %d деталей</item>
+        <item quantity="other">Осталось %d деталей</item>
+    </plurals>
+</resources>

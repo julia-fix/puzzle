@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gallery_title">Выберите изображение</string>
+    <string name="gallery_filter_all">Все</string>
+    <string name="gallery_category_nature">Природа</string>
+    <string name="gallery_category_sunsets">Закаты</string>
+    <string name="gallery_category_city">Город</string>
+    <string name="gallery_category_featured">Избранное</string>
+</resources>

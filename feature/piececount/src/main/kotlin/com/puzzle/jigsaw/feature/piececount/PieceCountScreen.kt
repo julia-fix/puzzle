@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.puzzle.jigsaw.core.designsystem.components.PuzzleBackButton
@@ -51,7 +52,7 @@ fun PieceCountScreen(
                 ) {
                     PuzzleBackButton(onClick = onBack)
                     Text(
-                        text = "Choose difficulty",
+                        text = stringResource(R.string.piececount_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(top = 12.dp),
@@ -111,7 +112,7 @@ private fun PieceCountTile(
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "pieces",
+                    text = stringResource(R.string.piececount_pieces_label),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

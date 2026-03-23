@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="piececount_title">Choose difficulty</string>
+    <string name="piececount_pieces_label">pieces</string>
+</resources>

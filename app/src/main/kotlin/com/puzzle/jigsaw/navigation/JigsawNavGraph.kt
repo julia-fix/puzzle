@@ -12,7 +12,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.puzzle.jigsaw.R
 import com.puzzle.jigsaw.data.catalog.AssetPuzzleCatalogRepository
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
@@ -106,7 +108,7 @@ private fun MissingArgumentState() {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "This screen could not be opened.",
+            text = stringResource(R.string.missing_argument_message),
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.padding(24.dp),
         )

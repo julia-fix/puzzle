@@ -64,6 +64,8 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
@@ -199,9 +201,15 @@ fun GameplayScreen(
     LaunchedEffect(pendingTrayReturnAnimation, pendingTrayScrollRestore) {
         val request = pendingTrayReturnAnimation ?: return@LaunchedEffect
         if (pendingTrayScrollRestore != null) return@LaunchedEffect
+        val handoffStartTopLeft = dragState
+            ?.takeIf { current ->
+                current.source == PieceDragSource.TRAY && current.pieceId == request.pieceId
+            }
+            ?.currentSelectedPieceTopLeft(latestTrayRowBounds)
+            ?: request.startTopLeft
         trayReturnAnimationState = TrayReturnAnimationState(
             pieceId = request.pieceId,
-            startTopLeft = request.startTopLeft,
+            startTopLeft = handoffStartTopLeft,
             endTopLeft = request.endTopLeft,
         )
         dragState = dragState?.takeUnless { current ->
@@ -304,22 +312,32 @@ fun GameplayScreen(
                                 modifier = Modifier.padding(top = 8.dp),
                                 verticalArrangement = Arrangement.spacedBy(2.dp),
                             ) {
+                                val completionPercent = (sessionState.completionRatio * 100).roundToInt()
+                                val totalPiecesLabel = pluralStringResource(
+                                    R.plurals.gameplay_piece_count,
+                                    sessionState.pieceCount.totalPieces,
+                                    sessionState.pieceCount.totalPieces,
+                                )
                                 Text(
                                     text = if (sessionState.completionRatio >= 1f) {
-                                        "Puzzle completed"
+                                        stringResource(R.string.gameplay_title_completed)
                                     } else {
-                                        "Assemble the puzzle"
+                                        stringResource(R.string.gameplay_title_in_progress)
                                     },
                                 )
                                 Text(
-                                    text = "${sessionState.pieceCount.title} • ${(sessionState.completionRatio * 100).roundToInt()}% complete",
+                                    text = stringResource(
+                                        R.string.gameplay_progress_summary,
+                                        totalPiecesLabel,
+                                        completionPercent,
+                                    ),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
                         TextButton(onClick = { isResetConfirmationVisible = true }) {
-                            Text("Reset")
+                            Text(stringResource(R.string.gameplay_reset))
                         }
                     }
                     LinearProgressIndicator(
@@ -554,12 +572,16 @@ fun GameplayScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "Loose pieces",
+                                text = stringResource(R.string.gameplay_loose_pieces_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                             )
                             Text(
-                                text = "${sessionState.remainingPieceIds.size} left",
+                                text = pluralStringResource(
+                                    R.plurals.gameplay_pieces_left,
+                                    sessionState.remainingPieceIds.size,
+                                    sessionState.remainingPieceIds.size,
+                                ),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -761,10 +783,10 @@ fun GameplayScreen(
         AlertDialog(
             onDismissRequest = { isResetConfirmationVisible = false },
             title = {
-                Text("Reset puzzle?")
+                Text(stringResource(R.string.gameplay_reset_dialog_title))
             },
             text = {
-                Text("Current progress for this puzzle size will be cleared.")
+                Text(stringResource(R.string.gameplay_reset_dialog_message))
             },
             confirmButton = {
                 TextButton(
@@ -773,12 +795,12 @@ fun GameplayScreen(
                         onResetProgress()
                     },
                 ) {
-                    Text("Reset")
+                    Text(stringResource(R.string.gameplay_reset_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { isResetConfirmationVisible = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.gameplay_cancel))
                 }
             },
         )
@@ -1315,7 +1337,7 @@ private fun FloatingDragCluster(
                 assetBitmap = assetBitmap,
                 boardCellWidth = previewCellWidth,
                 boardCellHeight = previewCellHeight,
-                highlightProgress = 0.35f,
+                highlightProgress = 0f,
                 modifier = Modifier.fillMaxSize(),
             )
         }

@@ -12,4 +12,3 @@ object JigsawDestination {
 
     fun gameplay(imageId: String, pieceCount: Int): String = "gameplay/$imageId/$pieceCount"
 }
-

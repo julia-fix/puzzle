@@ -6,4 +6,6 @@ data class PuzzleImage(
     val subtitle: String,
     val description: String,
     val assetPath: String,
+    val categoryId: String = "featured",
+    val categoryName: String = "Featured",
 )

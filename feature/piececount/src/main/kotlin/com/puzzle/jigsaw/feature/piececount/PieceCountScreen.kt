@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -29,13 +28,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.puzzle.jigsaw.core.designsystem.components.PuzzleBackButton
 import com.puzzle.jigsaw.core.model.PieceCountOption
-import com.puzzle.jigsaw.core.model.PuzzleImage
 import com.puzzle.jigsaw.core.model.RecentPuzzleSession
 
 @Composable
 fun PieceCountScreen(
-    image: PuzzleImage,
     pieceCountOptions: List<PieceCountOption>,
     recentSessions: List<RecentPuzzleSession>,
     onBack: () -> Unit,
@@ -51,11 +49,9 @@ fun PieceCountScreen(
                         .padding(horizontal = 8.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    IconButton(onClick = onBack) {
-                        Text("←")
-                    }
+                    PuzzleBackButton(onClick = onBack)
                     Text(
-                        text = image.title,
+                        text = "Choose difficulty",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(top = 12.dp),

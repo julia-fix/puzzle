@@ -27,6 +27,8 @@ class AssetPuzzleCatalogRepository(
                     subtitle = "Bundled image",
                     description = "Packaged starter puzzle image.",
                     assetPath = "$PUZZLES_DIR/$fileName",
+                    categoryId = defaultCategoryIdForIndex(index),
+                    categoryName = defaultCategoryNameForIndex(index),
                 )
             }
             .orEmpty()
@@ -53,6 +55,8 @@ class AssetPuzzleCatalogRepository(
                         subtitle = item.optString("subtitle").ifBlank { "Bundled image" },
                         description = item.optString("description").ifBlank { "Packaged starter puzzle image." },
                         assetPath = "$PUZZLES_DIR/$fileName",
+                        categoryId = item.optString("categoryId").ifBlank { "featured" },
+                        categoryName = item.optString("categoryName").ifBlank { "Featured" },
                     ),
                 )
             }
@@ -77,3 +81,16 @@ private fun titleFromId(id: String): String = id
         }
     }
 
+private fun defaultCategoryIdForIndex(index: Int): String = when (index) {
+    0, 3 -> "nature"
+    1 -> "sunsets"
+    2 -> "city"
+    else -> "featured"
+}
+
+private fun defaultCategoryNameForIndex(index: Int): String = when (index) {
+    0, 3 -> "Nature"
+    1 -> "Sunsets"
+    2 -> "City"
+    else -> "Featured"
+}

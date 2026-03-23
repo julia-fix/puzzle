@@ -65,7 +65,6 @@ fun JigsawNavGraph() {
                 MissingArgumentState()
             } else {
                 PieceCountScreen(
-                    image = image,
                     pieceCountOptions = pieceCounts,
                     recentSessions = recentSessions.value.filter { it.imageId == image.id },
                     onBack = { navController.popBackStack() },

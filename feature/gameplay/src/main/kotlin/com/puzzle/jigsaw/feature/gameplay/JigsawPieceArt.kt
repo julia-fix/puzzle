@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -33,6 +34,8 @@ internal fun JigsawBoard(
     pieceCount: PieceCountOption,
     pieces: List<JigsawPieceLayout>,
     placedPieceIds: Set<Int>,
+    highlightedPieceIds: Set<Int>,
+    finishedImageProgress: Float,
     assetBitmap: ImageBitmap?,
     modifier: Modifier = Modifier,
 ) {
@@ -63,12 +66,15 @@ internal fun JigsawBoard(
                     pieces.forEach { piece ->
                         val path = boardPaths.piecePaths.getValue(piece.pieceId)
                         val isPlaced = piece.pieceId in placedPieceIds
+                        val pieceHighlightProgress = if (piece.pieceId in highlightedPieceIds) 1f else 0f
                         if (isPlaced) {
-                            drawPieceShadow(
-                                path = path,
-                                color = palette.pieceShadow,
-                                offset = reliefOffset,
-                            )
+                            if (finishedImageProgress < 1f) {
+                                drawPieceShadow(
+                                    path = path,
+                                    color = palette.pieceShadow.copy(alpha = palette.pieceShadow.alpha * (1f - finishedImageProgress)),
+                                    offset = reliefOffset,
+                                )
+                            }
                             if (assetBitmap != null) {
                                 clipPath(path) {
                                     drawImage(
@@ -83,13 +89,27 @@ internal fun JigsawBoard(
                                     style = Fill,
                                 )
                             }
-                            drawPieceRelief(
-                                path = path,
-                                strokeWidth = strokeWidth,
-                                highlight = palette.pieceHighlight,
-                                shade = palette.pieceShade,
-                                offset = reliefOffset,
-                            )
+                            if (finishedImageProgress < 1f) {
+                                drawPieceRelief(
+                                    path = path,
+                                    strokeWidth = strokeWidth,
+                                    highlight = palette.pieceHighlight.copy(alpha = palette.pieceHighlight.alpha * (1f - finishedImageProgress)),
+                                    shade = palette.pieceShade.copy(alpha = palette.pieceShade.alpha * (1f - finishedImageProgress)),
+                                    offset = reliefOffset,
+                                )
+                            }
+                            if (pieceHighlightProgress > 0f) {
+                                drawPath(
+                                    path = path,
+                                    color = palette.snapHighlight.copy(alpha = 0.16f * pieceHighlightProgress),
+                                    style = Fill,
+                                )
+                                drawPath(
+                                    path = path,
+                                    color = palette.snapHighlight.copy(alpha = 0.5f * pieceHighlightProgress),
+                                    style = Stroke(width = strokeWidth * 0.42f),
+                                )
+                            }
                         } else {
                             drawPath(
                                 path = path,
@@ -97,6 +117,13 @@ internal fun JigsawBoard(
                                 style = Fill,
                             )
                         }
+                    }
+                    if (assetBitmap != null && finishedImageProgress > 0f) {
+                        drawImage(
+                            image = assetBitmap,
+                            dstSize = dstSize,
+                            alpha = finishedImageProgress,
+                        )
                     }
                     drawPath(
                         path = boardPaths.outlinePath,

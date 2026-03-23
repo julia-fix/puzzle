@@ -25,11 +25,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -70,6 +70,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.puzzle.jigsaw.core.designsystem.components.PuzzleBackButton
 import com.puzzle.jigsaw.core.designsystem.components.PuzzleImageAspectRatio
 import com.puzzle.jigsaw.core.designsystem.components.rememberPuzzleAssetBitmap
 import com.puzzle.jigsaw.core.model.PieceCountOption
@@ -160,6 +161,7 @@ fun GameplayScreen(
     val density = LocalDensity.current
     val view = LocalView.current
     val trayListState = rememberLazyListState()
+    val allPieceIds = remember(pieceLayout) { pieceLayout.mapTo(linkedSetOf()) { it.pieceId } }
 
     var highlightedPieceIds by remember { mutableStateOf<Set<Int>>(emptySet()) }
     var dragState by remember { mutableStateOf<PieceDragState?>(null) }
@@ -176,10 +178,17 @@ fun GameplayScreen(
     var gestureExclusionRect by remember { mutableStateOf<AndroidRect?>(null) }
     var activeTrayScrollSnapshot by remember { mutableStateOf<TrayScrollSnapshot?>(null) }
     var pendingTrayScrollRestore by remember { mutableStateOf<TrayScrollSnapshot?>(null) }
+    var isResetConfirmationVisible by remember { mutableStateOf(false) }
+    var didAnimateCompletion by remember(sessionState.image.id, sessionState.pieceCount.totalPieces) {
+        mutableStateOf(sessionState.completionRatio >= 1f)
+    }
     val latestSessionState by rememberUpdatedState(sessionState)
     val latestPiecesById by rememberUpdatedState(piecesById)
     val latestTrayRowBounds by rememberUpdatedState(trayRowBounds)
     val latestTrayItemBounds by rememberUpdatedState(trayItemBounds.toMap())
+    val finishedImageProgress = remember(sessionState.image.id, sessionState.pieceCount.totalPieces) {
+        Animatable(if (sessionState.completionRatio >= 1f) 1f else 0f)
+    }
 
     LaunchedEffect(pendingTrayScrollRestore) {
         val snapshot = pendingTrayScrollRestore ?: return@LaunchedEffect
@@ -223,11 +232,14 @@ fun GameplayScreen(
         }
     }
 
-    fun flashPieces(pieceIds: Set<Int>) {
+    fun flashPieces(
+        pieceIds: Set<Int>,
+        durationMillis: Long = 420L,
+    ) {
         if (pieceIds.isEmpty()) return
         highlightedPieceIds = highlightedPieceIds + pieceIds
         scope.launch {
-            delay(420)
+            delay(durationMillis)
             highlightedPieceIds = highlightedPieceIds - pieceIds
         }
     }
@@ -244,39 +256,76 @@ fun GameplayScreen(
         snapAnimationState = null
     }
 
+    LaunchedEffect(sessionState.completionRatio, snapAnimationState) {
+        if (sessionState.completionRatio < 1f) {
+            didAnimateCompletion = false
+            finishedImageProgress.snapTo(0f)
+            return@LaunchedEffect
+        }
+        if (didAnimateCompletion) {
+            if (finishedImageProgress.value != 1f) {
+                finishedImageProgress.snapTo(1f)
+            }
+            return@LaunchedEffect
+        }
+        if (snapAnimationState != null) return@LaunchedEffect
+
+        didAnimateCompletion = true
+        flashPieces(
+            pieceIds = allPieceIds,
+            durationMillis = CompletionHighlightDurationMillis.toLong(),
+        )
+        finishedImageProgress.snapTo(0f)
+        delay(CompletionHighlightDurationMillis.toLong())
+        finishedImageProgress.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = CompletionRevealDurationMillis),
+        )
+    }
+
     Scaffold(
         topBar = {
             Surface(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(horizontal = 8.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.Top,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .statusBarsPadding()
+                            .padding(horizontal = 8.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        IconButton(onClick = onBack) {
-                            Text("←")
-                        }
-                        Column(
-                            modifier = Modifier.padding(top = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.Top,
                         ) {
-                            Text(sessionState.image.title)
-                            Text(
-                                text = "${sessionState.pieceCount.title} • ${(sessionState.completionRatio * 100).roundToInt()}% complete",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            PuzzleBackButton(onClick = onBack)
+                            Column(
+                                modifier = Modifier.padding(top = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                            ) {
+                                Text(
+                                    text = if (sessionState.completionRatio >= 1f) {
+                                        "Puzzle completed"
+                                    } else {
+                                        "Assemble the puzzle"
+                                    },
+                                )
+                                Text(
+                                    text = "${sessionState.pieceCount.title} • ${(sessionState.completionRatio * 100).roundToInt()}% complete",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                        TextButton(onClick = { isResetConfirmationVisible = true }) {
+                            Text("Reset")
                         }
                     }
-                    TextButton(onClick = onResetProgress) {
-                        Text("Reset")
-                    }
+                    LinearProgressIndicator(
+                        progress = { sessionState.completionRatio },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
         },
@@ -292,11 +341,6 @@ fun GameplayScreen(
                 ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            LinearProgressIndicator(
-                progress = { sessionState.completionRatio },
-                modifier = Modifier.fillMaxWidth(),
-            )
-
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -386,6 +430,8 @@ fun GameplayScreen(
                             pieceCount = sessionState.pieceCount,
                             pieces = pieceLayout,
                             placedPieceIds = sessionState.placedPieceIds - animatingPlacedPieceIds,
+                            highlightedPieceIds = highlightedPieceIds,
+                            finishedImageProgress = finishedImageProgress.value,
                             assetBitmap = assetBitmap,
                             modifier = Modifier
                                 .fillMaxSize()
@@ -709,6 +755,33 @@ fun GameplayScreen(
                 }
             }
         }
+    }
+
+    if (isResetConfirmationVisible) {
+        AlertDialog(
+            onDismissRequest = { isResetConfirmationVisible = false },
+            title = {
+                Text("Reset puzzle?")
+            },
+            text = {
+                Text("Current progress for this puzzle size will be cleared.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        isResetConfirmationVisible = false
+                        onResetProgress()
+                    },
+                ) {
+                    Text("Reset")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isResetConfirmationVisible = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
     }
 }
 
@@ -1700,6 +1773,8 @@ private const val TrayReferenceColumns = 6
 private const val TrayReferenceRows = 8
 private const val HighlightDurationMillis = 260
 private const val SnapAnimationDurationMillis = 220
+private const val CompletionHighlightDurationMillis = 650
+private const val CompletionRevealDurationMillis = 320
 private const val TrayReorderAnimationDurationMillis = 220
 private const val TrayReturnAnimationDurationMillis = 220
 private const val BoardSnapThreshold = 0.28f

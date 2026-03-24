@@ -352,9 +352,7 @@ fun GameplayScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
-                    start = 16.dp,
                     top = padding.calculateTopPadding() + 12.dp,
-                    end = 16.dp,
                     bottom = padding.calculateBottomPadding() + 16.dp,
                 ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -369,7 +367,7 @@ fun GameplayScreen(
                         }
                     },
             ) {
-                val boardCardWidth = maxWidth
+                val boardCardWidth = maxWidth - (ScreenHorizontalPadding * 2)
                 val boardCardHeight = boardCardWidth / PuzzleImageAspectRatio
                 val boardContentWidth = boardCardWidth - (BoardInnerPadding * 2)
                 val boardContentHeight = boardCardHeight - (BoardInnerPadding * 2)
@@ -380,11 +378,12 @@ fun GameplayScreen(
                 val boardCellWidthPx = with(density) { boardCellWidth.toPx() }
                 val boardCellHeightPx = with(density) { boardCellHeight.toPx() }
                 val boardInnerPaddingPx = with(density) { BoardInnerPadding.toPx() }
+                val boardHorizontalInsetPx = with(density) { ScreenHorizontalPadding.toPx() }
                 val trayItemSpacingPx = with(density) { TrayItemSpacing.toPx() }
                 val boardContentRect = Rect(
-                    left = boardInnerPaddingPx,
+                    left = boardHorizontalInsetPx + boardInnerPaddingPx,
                     top = boardInnerPaddingPx,
-                    right = boardInnerPaddingPx + with(density) { boardContentWidth.toPx() },
+                    right = boardHorizontalInsetPx + boardInnerPaddingPx + with(density) { boardContentWidth.toPx() },
                     bottom = boardInnerPaddingPx + with(density) { boardContentHeight.toPx() },
                 )
 
@@ -398,8 +397,10 @@ fun GameplayScreen(
                 val trayLayoutPx = remember(trayLayout, density) {
                     with(density) {
                         TrayLayoutPx(
-                            slotWidth = trayLayout.slotSize.width.toPx(),
-                            slotHeight = trayLayout.slotSize.height.toPx(),
+                            slotHeight = trayLayout.slotHeight.toPx(),
+                            slotWidths = trayLayout.slotWidths.mapValues { (_, width) ->
+                                width.toPx()
+                            },
                             offsets = trayLayout.offsets.mapValues { (_, offset) ->
                                 Offset(offset.x.toPx(), offset.y.toPx())
                             },
@@ -407,16 +408,18 @@ fun GameplayScreen(
                     }
                 }
                 val remainingPieceCount = sessionState.remainingPieceIds.size
+                val trayAvailableWidth = maxWidth
                 val trayContentWidth = if (remainingPieceCount == 0) {
                     0.dp
                 } else {
-                    (trayLayout.slotSize.width * remainingPieceCount.toFloat()) +
-                        (TrayItemSpacing * (remainingPieceCount - 1).toFloat())
+                    sessionState.remainingPieceIds.sumOf { pieceId ->
+                        trayLayout.slotWidths.getValue(pieceId).value.toDouble()
+                    }.dp + (TrayItemSpacing * (remainingPieceCount - 1).toFloat())
                 }
                 val trayHorizontalPadding = if (remainingPieceCount == 0) {
                     2.dp
                 } else {
-                    val extraSpace = maxWidth - trayContentWidth
+                    val extraSpace = trayAvailableWidth - trayContentWidth
                     if (extraSpace > 4.dp) extraSpace / 2f else 2.dp
                 }
 
@@ -441,7 +444,8 @@ fun GameplayScreen(
                 ) {
                     ElevatedCard(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .width(boardCardWidth)
+                            .align(Alignment.TopCenter)
                             .aspectRatio(PuzzleImageAspectRatio),
                     ) {
                         JigsawBoard(
@@ -567,7 +571,9 @@ fun GameplayScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = ScreenHorizontalPadding),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -988,9 +994,6 @@ private fun TrayPieceCard(
             .pointerInput(pieceId) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
-                    if (!previewBounds.contains(down.position)) {
-                        return@awaitEachGesture
-                    }
                     var accumulatedDrag = Offset.Zero
                     var pieceDragStarted = false
 
@@ -1028,7 +1031,14 @@ private fun TrayPieceCard(
                             }
 
                             pieceDragStarted = true
-                            currentOnDragStarted(down.position - previewBounds.topLeft)
+                            // Tray drags may start anywhere inside the slot; clamp the grab point
+                            // onto the visible preview so the piece still uses a valid anchor.
+                            currentOnDragStarted(
+                                Offset(
+                                    x = down.position.x.coerceIn(previewBounds.left, previewBounds.right) - previewBounds.left,
+                                    y = down.position.y.coerceIn(previewBounds.top, previewBounds.bottom) - previewBounds.top,
+                                ),
+                            )
                             change.consume()
                             if (accumulatedDrag != Offset.Zero) {
                                 currentOnDragged(accumulatedDrag)
@@ -1090,11 +1100,11 @@ private fun TrayPieceCard(
 @Composable
 private fun TrayPlaceholderSlot(
     modifier: Modifier = Modifier,
-    slotSize: DpSize,
-    pieceCount: Int,
+    width: Dp,
+    height: Dp,
 ) {
     val placeholderWidth by animateDpAsState(
-        targetValue = (slotSize.width * pieceCount.toFloat()) + (TrayItemSpacing * (pieceCount - 1).coerceAtLeast(0).toFloat()),
+        targetValue = width,
         animationSpec = tween(durationMillis = TrayReorderAnimationDurationMillis),
         label = "trayPlaceholderWidth",
     )
@@ -1102,7 +1112,7 @@ private fun TrayPlaceholderSlot(
     Box(
         modifier = modifier
             .width(placeholderWidth)
-            .height(slotSize.height),
+            .height(height),
     )
 }
 
@@ -1141,18 +1151,20 @@ private fun LoosePiecesTrayRow(
         orderedPieceIds = remainingPieceIds,
         dragState = dragState,
         placeholderIndex = trayDropIndex,
-        placeholderPieceCount = dragState?.clusterPieceIds?.size ?: 0,
+        traySlotWidths = trayLayout.slotWidths,
     )
 
     LazyRow(
         state = state,
-        modifier = Modifier.onGloballyPositioned { coordinates ->
-            onTrayRowBoundsChanged(
-                coordinates
-                    .boundsInRoot()
-                    .translatedBy(Offset(-overlayOriginInRoot.x, -overlayOriginInRoot.y)),
-            )
-        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .onGloballyPositioned { coordinates ->
+                onTrayRowBoundsChanged(
+                    coordinates
+                        .boundsInRoot()
+                        .translatedBy(Offset(-overlayOriginInRoot.x, -overlayOriginInRoot.y)),
+                )
+            },
         contentPadding = PaddingValues(horizontal = trayHorizontalPadding),
         horizontalArrangement = Arrangement.spacedBy(TrayItemSpacing),
     ) {
@@ -1177,7 +1189,10 @@ private fun LoosePiecesTrayRow(
                         },
                         boardCellWidth = trayReferenceCellWidth,
                         boardCellHeight = trayReferenceCellHeight,
-                        slotSize = trayLayout.slotSize,
+                        slotSize = DpSize(
+                            width = trayLayout.slotWidths.getValue(pieceId),
+                            height = trayLayout.slotHeight,
+                        ),
                         previewOffset = trayLayout.offsets.getValue(pieceId),
                         overlayOriginInRoot = overlayOriginInRoot,
                         collapsed = entry.collapsed,
@@ -1202,8 +1217,8 @@ private fun LoosePiecesTrayRow(
                 is TrayEntry.Placeholder -> {
                     TrayPlaceholderSlot(
                         modifier = Modifier.animateItem(),
-                        slotSize = trayLayout.slotSize,
-                        pieceCount = entry.pieceCount,
+                        width = entry.width,
+                        height = trayLayout.slotHeight,
                     )
                 }
             }
@@ -1487,14 +1502,15 @@ private sealed interface TrayEntry {
     }
 
     data class Placeholder(
-        val pieceCount: Int,
+        val width: Dp,
     ) : TrayEntry {
         override val key: Any = "placeholder"
     }
 }
 
 private data class TrayLayout(
-    val slotSize: DpSize,
+    val slotHeight: Dp,
+    val slotWidths: Map<Int, Dp>,
     val offsets: Map<Int, DpOffset>,
 )
 
@@ -1528,8 +1544,8 @@ private data class TrayScrollSnapshot(
 )
 
 private data class TrayLayoutPx(
-    val slotWidth: Float,
     val slotHeight: Float,
+    val slotWidths: Map<Int, Float>,
     val offsets: Map<Int, Offset>,
 )
 
@@ -1537,7 +1553,7 @@ private fun createTrayEntries(
     orderedPieceIds: List<Int>,
     dragState: PieceDragState?,
     placeholderIndex: Int?,
-    placeholderPieceCount: Int,
+    traySlotWidths: Map<Int, Dp>,
 ): List<TrayEntry> {
     val collapsedPieceIds = if (dragState?.source == PieceDragSource.TRAY) {
         dragState.clusterPieceIds
@@ -1551,7 +1567,7 @@ private fun createTrayEntries(
         )
     }.toMutableList<TrayEntry>()
 
-    if (dragState == null || placeholderIndex == null || placeholderPieceCount <= 0) {
+    if (dragState == null || placeholderIndex == null || dragState.clusterPieceIds.isEmpty()) {
         return baseEntries
     }
 
@@ -1573,7 +1589,11 @@ private fun createTrayEntries(
         entryInsertIndex = baseEntries.size
     }
 
-    baseEntries.add(entryInsertIndex, TrayEntry.Placeholder(pieceCount = placeholderPieceCount))
+    val placeholderWidth =
+        dragState.clusterPieceIds.sumOf { pieceId ->
+            traySlotWidths.getValue(pieceId).value.toDouble()
+        }.dp + (TrayItemSpacing * (dragState.clusterPieceIds.size - 1).coerceAtLeast(0).toFloat())
+    baseEntries.add(entryInsertIndex, TrayEntry.Placeholder(width = placeholderWidth))
     return baseEntries
 }
 
@@ -1612,7 +1632,6 @@ private fun resolveTrayReturnAnimation(
 ): PendingTrayReturnAnimation? {
     val movedOffset = trayLayoutPx.offsets.getValue(pieceId)
     val stablePieceIds = orderedPieceIds.filterNot { it in movedPieceIds }
-    val slotSpan = trayLayoutPx.slotWidth + trayItemSpacingPx
 
     val targetSlotTop = when {
         stablePieceIds.isNotEmpty() -> {
@@ -1637,7 +1656,8 @@ private fun resolveTrayReturnAnimation(
             val anchorPieceId = stablePieceIds.last()
             val anchorBounds = trayItemBounds[anchorPieceId] ?: return null
             (anchorBounds.left - trayLayoutPx.offsets.getValue(anchorPieceId).x) +
-                (slotSpan * movedPieceIds.size.toFloat())
+                trayLayoutPx.slotWidths.getValue(anchorPieceId) +
+                trayItemSpacingPx
         }
     }
 
@@ -1668,18 +1688,22 @@ private fun createTrayLayout(
     val maxRight = extensionsByPiece.values.maxOfOrNull(PieceExtensions::right) ?: 0.dp
     val maxTop = extensionsByPiece.values.maxOfOrNull(PieceExtensions::top) ?: 0.dp
     val maxBottom = extensionsByPiece.values.maxOfOrNull(PieceExtensions::bottom) ?: 0.dp
-    val slotSize = DpSize(
-        width = cellWidth + maxLeft + maxRight,
-        height = cellHeight + maxTop + maxBottom,
-    )
+    val slotHeight = cellHeight + maxTop + maxBottom
+    val slotWidths = extensionsByPiece.mapValues { (_, ext) ->
+        val leftSlack = (maxLeft - ext.left) * TrayWidthSlackFactor
+        val rightSlack = (maxRight - ext.right) * TrayWidthSlackFactor
+        cellWidth + ext.left + ext.right + leftSlack + rightSlack
+    }
     val offsets = extensionsByPiece.mapValues { (_, ext) ->
+        val leftSlack = (maxLeft - ext.left) * TrayWidthSlackFactor
         DpOffset(
-            x = maxLeft - ext.left,
+            x = leftSlack,
             y = maxTop - ext.top,
         )
     }
     return TrayLayout(
-        slotSize = slotSize,
+        slotHeight = slotHeight,
+        slotWidths = slotWidths,
         offsets = offsets,
     )
 }
@@ -1790,7 +1814,9 @@ private fun Rect.toAndroidRect(): AndroidRect = AndroidRect(
 )
 
 private val BoardInnerPadding = 12.dp
-private val TrayItemSpacing = 8.dp
+private val ScreenHorizontalPadding = 16.dp
+private val TrayItemSpacing = 2.dp
+private const val TrayWidthSlackFactor = 0.2f
 private const val TrayReferenceColumns = 6
 private const val TrayReferenceRows = 8
 private const val HighlightDurationMillis = 260

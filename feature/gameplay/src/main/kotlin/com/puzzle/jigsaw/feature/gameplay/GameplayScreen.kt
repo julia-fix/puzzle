@@ -9,12 +9,14 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,9 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
@@ -44,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -162,7 +163,7 @@ fun GameplayScreen(
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
     val view = LocalView.current
-    val trayListState = rememberLazyListState()
+    val trayScrollState = rememberScrollState()
     val allPieceIds = remember(pieceLayout) { pieceLayout.mapTo(linkedSetOf()) { it.pieceId } }
 
     var highlightedPieceIds by remember { mutableStateOf<Set<Int>>(emptySet()) }
@@ -172,6 +173,7 @@ fun GameplayScreen(
     var pendingTrayReturnAnimation by remember { mutableStateOf<PendingTrayReturnAnimation?>(null) }
     var trayReturnAnimationState by remember { mutableStateOf<TrayReturnAnimationState?>(null) }
     var trayReturnAnimationToken by remember { mutableIntStateOf(0) }
+    var pendingTrayRemovalPieceIds by remember { mutableStateOf<Set<Int>>(emptySet()) }
     val snapProgress = remember { Animatable(1f) }
     val trayReturnProgress = remember { Animatable(1f) }
     val trayItemBounds = remember { mutableStateMapOf<Int, Rect>() }
@@ -181,6 +183,9 @@ fun GameplayScreen(
     var activeTrayScrollSnapshot by remember { mutableStateOf<TrayScrollSnapshot?>(null) }
     var pendingTrayScrollRestore by remember { mutableStateOf<TrayScrollSnapshot?>(null) }
     var isResetConfirmationVisible by remember { mutableStateOf(false) }
+    var trayTopRowSizeHint by remember(sessionState.image.id, sessionState.pieceCount.totalPieces) {
+        mutableIntStateOf(0)
+    }
     var didAnimateCompletion by remember(sessionState.image.id, sessionState.pieceCount.totalPieces) {
         mutableStateOf(sessionState.completionRatio >= 1f)
     }
@@ -192,9 +197,15 @@ fun GameplayScreen(
         Animatable(if (sessionState.completionRatio >= 1f) 1f else 0f)
     }
 
+    LaunchedEffect(sessionState.remainingPieceIds, pendingTrayRemovalPieceIds) {
+        if (pendingTrayRemovalPieceIds.isEmpty()) return@LaunchedEffect
+        pendingTrayRemovalPieceIds =
+            pendingTrayRemovalPieceIds.intersect(sessionState.remainingPieceIds.toSet())
+    }
+
     LaunchedEffect(pendingTrayScrollRestore) {
         val snapshot = pendingTrayScrollRestore ?: return@LaunchedEffect
-        trayListState.scrollToItem(snapshot.firstVisibleItemIndex, snapshot.firstVisibleItemScrollOffset)
+        trayScrollState.scrollTo(snapshot.scrollOffset)
         pendingTrayScrollRestore = null
     }
 
@@ -409,12 +420,26 @@ fun GameplayScreen(
                 }
                 val remainingPieceCount = sessionState.remainingPieceIds.size
                 val trayAvailableWidth = maxWidth
+                val trayAvailableHeight = (maxHeight - boardCardHeight - 16.dp).coerceAtLeast(0.dp)
+                val secondRowVisibleHeight =
+                    (trayAvailableHeight - trayLayout.slotHeight - TrayRowSpacing).coerceAtLeast(0.dp)
+                val supportsTwoTrayRows =
+                    secondRowVisibleHeight >= (trayLayout.slotHeight * TraySecondRowMinVisibleFraction)
+                val trayRowCount = if (remainingPieceCount > 1 && supportsTwoTrayRows) 2 else 1
+                val trayTopRowSize = normalizedTrayTopRowSize(
+                    topRowSizeHint = trayTopRowSizeHint,
+                    totalCount = remainingPieceCount,
+                    rowCount = trayRowCount,
+                )
                 val trayContentWidth = if (remainingPieceCount == 0) {
                     0.dp
                 } else {
-                    sessionState.remainingPieceIds.sumOf { pieceId ->
-                        trayLayout.slotWidths.getValue(pieceId).value.toDouble()
-                    }.dp + (TrayItemSpacing * (remainingPieceCount - 1).toFloat())
+                    calculateTrayContentWidth(
+                        orderedPieceIds = sessionState.remainingPieceIds,
+                        traySlotWidths = trayLayout.slotWidths,
+                        rowCount = trayRowCount,
+                        topRowSize = trayTopRowSize,
+                    )
                 }
                 val trayHorizontalPadding = if (remainingPieceCount == 0) {
                     2.dp
@@ -542,7 +567,11 @@ fun GameplayScreen(
                                             trayItemBounds = latestTrayItemBounds,
                                             trayLayoutPx = trayLayoutPx,
                                             trayItemSpacingPx = trayItemSpacingPx,
+                                            trayRowCount = trayRowCount,
+                                            trayTopRowSize = trayTopRowSize,
+                                            trayRowSpacingPx = with(density) { TrayRowSpacing.toPx() },
                                             piecesById = latestPiecesById,
+                                            onTrayTopRowSizeChanged = { trayTopRowSizeHint = it },
                                             onStartTrayReturnAnimation = { animation ->
                                                 pendingTrayReturnAnimation = animation
                                             },
@@ -570,30 +599,8 @@ fun GameplayScreen(
                         modifier = Modifier.padding(top = boardCardHeight + 16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = ScreenHorizontalPadding),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.gameplay_loose_pieces_title),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            Text(
-                                text = pluralStringResource(
-                                    R.plurals.gameplay_pieces_left,
-                                    sessionState.remainingPieceIds.size,
-                                    sessionState.remainingPieceIds.size,
-                                ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
                         LoosePiecesTrayRow(
-                            state = trayListState,
+                            scrollState = trayScrollState,
                             remainingPieceIds = sessionState.remainingPieceIds,
                             piecesById = piecesById,
                             pieceCount = sessionState.pieceCount,
@@ -603,9 +610,12 @@ fun GameplayScreen(
                             returningTrayPieceId = returningTrayPieceId,
                             hiddenPieceIds = hiddenPieceIds,
                             highlightedPieceIds = highlightedPieceIds,
+                            pendingTrayRemovalPieceIds = pendingTrayRemovalPieceIds,
                             trayReferenceCellWidth = trayReferenceCellWidth,
                             trayReferenceCellHeight = trayReferenceCellHeight,
                             trayLayout = trayLayout,
+                            trayRowCount = trayRowCount,
+                            trayTopRowSize = trayTopRowSize,
                             trayHorizontalPadding = trayHorizontalPadding,
                             overlayOriginInRoot = overlayOriginInRoot,
                             trayRowBounds = trayRowBounds,
@@ -650,8 +660,7 @@ fun GameplayScreen(
                                     startPositions = mapOf(pieceId to trayBounds.topLeft),
                                 )
                                 activeTrayScrollSnapshot = TrayScrollSnapshot(
-                                    firstVisibleItemIndex = trayListState.firstVisibleItemIndex,
-                                    firstVisibleItemScrollOffset = trayListState.firstVisibleItemScrollOffset,
+                                    scrollOffset = trayScrollState.value,
                                 )
                             },
                             onTrayDragged = { pieceId: Int, dragAmount: Offset ->
@@ -661,8 +670,13 @@ fun GameplayScreen(
                             },
                             onTrayDragEnded = { pieceId: Int ->
                                 val currentDrag = dragState?.takeIf { it.pieceId == pieceId } ?: return@LoosePiecesTrayRow
-                                val returnsToTray =
-                                    trayRowBounds?.contains(currentDrag.currentPointer) == true
+                                val returnsToTray = isDragOverTray(
+                                    dragState = currentDrag,
+                                    trayRowBounds = trayRowBounds,
+                                )
+                                val dropsToBoard =
+                                    !returnsToTray &&
+                                        boardContentRect.contains(currentDrag.currentBoardAlignedCenter(trayRowBounds))
                                 handleDragFinished(
                                     dragState = currentDrag,
                                     sessionState = sessionState,
@@ -673,7 +687,11 @@ fun GameplayScreen(
                                     trayItemBounds = trayItemBounds,
                                     trayLayoutPx = trayLayoutPx,
                                     trayItemSpacingPx = trayItemSpacingPx,
+                                    trayRowCount = trayRowCount,
+                                    trayTopRowSize = trayTopRowSize,
+                                    trayRowSpacingPx = with(density) { TrayRowSpacing.toPx() },
                                     piecesById = piecesById,
+                                    onTrayTopRowSizeChanged = { trayTopRowSizeHint = it },
                                     onStartTrayReturnAnimation = { animation ->
                                         pendingTrayReturnAnimation = animation
                                     },
@@ -686,6 +704,10 @@ fun GameplayScreen(
                                 )
                                 if (returnsToTray) {
                                     pendingTrayScrollRestore = activeTrayScrollSnapshot
+                                }
+                                if (dropsToBoard && currentDrag.source == PieceDragSource.TRAY) {
+                                    pendingTrayRemovalPieceIds =
+                                        pendingTrayRemovalPieceIds + currentDrag.clusterPieceIds
                                 }
                                 activeTrayScrollSnapshot = null
                                 val shouldKeepTrayOverlayUntilReturnAnimation =
@@ -823,7 +845,11 @@ private fun handleDragFinished(
     trayItemBounds: Map<Int, Rect>,
     trayLayoutPx: TrayLayoutPx,
     trayItemSpacingPx: Float,
+    trayRowCount: Int,
+    trayTopRowSize: Int,
+    trayRowSpacingPx: Float,
     piecesById: Map<Int, com.puzzle.jigsaw.domain.jigsaw.JigsawPieceLayout>,
+    onTrayTopRowSizeChanged: (Int) -> Unit,
     onStartTrayReturnAnimation: (PendingTrayReturnAnimation) -> Unit,
     onCommit: (JigsawSessionState) -> Unit,
     onStartSnapAnimation: (PieceSnapAnimationState) -> Unit,
@@ -834,7 +860,7 @@ private fun handleDragFinished(
     val boardAlignedTopLeft = dragState.currentBoardAlignedTopLeft(trayRowBounds)
     val boardAlignedCenter = dragState.currentBoardAlignedCenter(trayRowBounds)
 
-    if (trayRowBounds?.contains(dragState.currentPointer) == true) {
+    if (isDragOverTray(dragState, trayRowBounds)) {
         if (dragState.source == PieceDragSource.BOARD && dragState.clusterPieceIds.size > 1) {
             onCancel()
             return
@@ -844,28 +870,38 @@ private fun handleDragFinished(
         } else {
             sessionState
         }
-        val resolvedTrayDropIndex = calculateTrayDropIndex(
+        val resolvedTrayDropTarget = calculateTrayDropTarget(
             dragState = dragState,
             trayRowBounds = trayRowBounds,
             orderedPieceIds = trayState.remainingPieceIds,
             trayItemBounds = trayItemBounds,
-        ) ?: trayState.remainingPieceIds.size
-        val reorderedState = reorderTrayPieces(
-            state = trayState,
-            movedPieceIds = dragState.clusterPieceIds,
-            targetIndex = resolvedTrayDropIndex,
+            rowCount = trayRowCount,
+            topRowSize = trayTopRowSize,
+            traySlotHeightPx = trayLayoutPx.slotHeight,
+            trayRowSpacingPx = trayRowSpacingPx,
+        ) ?: TrayDropTarget(rowIndex = 0, indexInRow = trayState.remainingPieceIds.size)
+        val reorderedRows = reorderTrayRows(
+            orderedPieceIds = trayState.remainingPieceIds,
+            dragState = dragState,
+            dropTarget = resolvedTrayDropTarget,
+            rowCount = trayRowCount,
+            topRowSize = trayTopRowSize,
         )
+        val reorderedRemaining = reorderedRows.top + reorderedRows.bottom
+        val reorderedState = applyRemainingPieceOrder(trayState, reorderedRemaining)
+        onTrayTopRowSizeChanged(reorderedRows.top.size)
         if (dragState.source == PieceDragSource.TRAY) {
             resolveTrayReturnAnimation(
                 pieceId = dragState.pieceId,
-                movedPieceIds = dragState.clusterPieceIds,
                 startTopLeft = currentTopLeft,
-                insertionIndex = resolvedTrayDropIndex,
-                orderedPieceIds = trayState.remainingPieceIds,
+                orderedPieceIds = reorderedState.remainingPieceIds,
                 trayItemBounds = trayItemBounds,
                 trayLayoutPx = trayLayoutPx,
                 trayRowBounds = trayRowBounds,
                 trayItemSpacingPx = trayItemSpacingPx,
+                rowCount = trayRowCount,
+                topRowSize = reorderedRows.top.size,
+                rowSpacingPx = trayRowSpacingPx,
             )?.let(onStartTrayReturnAnimation)
         }
         onCommit(reorderedState)
@@ -888,13 +924,28 @@ private fun handleDragFinished(
             boardContentRect = boardContentRect,
         ),
     )
+    val trayAwareMovedState = if (dragState.source == PieceDragSource.TRAY) {
+        val removedRows = removeFromTrayRows(
+            orderedPieceIds = sessionState.remainingPieceIds,
+            removedPieceIds = dragState.clusterPieceIds,
+            rowCount = trayRowCount,
+            topRowSize = trayTopRowSize,
+        )
+        onTrayTopRowSizeChanged(removedRows.top.size)
+        applyRemainingPieceOrder(
+            state = movedState,
+            reorderedRemaining = removedRows.top + removedRows.bottom,
+        )
+    } else {
+        movedState
+    }
     val snapOutcome = snapPieceCluster(
-        state = movedState,
+        state = trayAwareMovedState,
         pieceId = dragState.pieceId,
         snapThreshold = BoardSnapThreshold,
     )
     if (!snapOutcome.didSnap) {
-        onCommit(movedState)
+        onCommit(trayAwareMovedState)
         return
     }
 
@@ -1118,7 +1169,7 @@ private fun TrayPlaceholderSlot(
 
 @Composable
 private fun LoosePiecesTrayRow(
-    state: androidx.compose.foundation.lazy.LazyListState,
+    scrollState: androidx.compose.foundation.ScrollState,
     remainingPieceIds: List<Int>,
     piecesById: Map<Int, com.puzzle.jigsaw.domain.jigsaw.JigsawPieceLayout>,
     pieceCount: PieceCountOption,
@@ -1128,9 +1179,12 @@ private fun LoosePiecesTrayRow(
     returningTrayPieceId: Int?,
     hiddenPieceIds: Set<Int>,
     highlightedPieceIds: Set<Int>,
+    pendingTrayRemovalPieceIds: Set<Int>,
     trayReferenceCellWidth: Dp,
     trayReferenceCellHeight: Dp,
     trayLayout: TrayLayout,
+    trayRowCount: Int,
+    trayTopRowSize: Int,
     trayHorizontalPadding: Dp,
     overlayOriginInRoot: Offset,
     trayRowBounds: Rect?,
@@ -1141,23 +1195,42 @@ private fun LoosePiecesTrayRow(
     onTrayDragged: (Int, Offset) -> Unit,
     onTrayDragEnded: (Int) -> Unit,
 ) {
-    val trayDropIndex = calculateTrayDropIndex(
+    val trayDropTarget = calculateTrayDropTarget(
         dragState = dragState,
         trayRowBounds = trayRowBounds,
         orderedPieceIds = remainingPieceIds,
         trayItemBounds = trayItemBounds,
+        rowCount = trayRowCount,
+        topRowSize = trayTopRowSize,
+        traySlotHeightPx = with(LocalDensity.current) { trayLayout.slotHeight.toPx() },
+        trayRowSpacingPx = with(LocalDensity.current) { TrayRowSpacing.toPx() },
     )
-    val trayEntries = createTrayEntries(
-        orderedPieceIds = remainingPieceIds,
-        dragState = dragState,
-        placeholderIndex = trayDropIndex,
-        traySlotWidths = trayLayout.slotWidths,
-    )
+    val trayRows = remember(
+        remainingPieceIds,
+        dragState,
+        trayDropTarget,
+        trayLayout,
+        trayRowCount,
+        pendingTrayRemovalPieceIds,
+    ) {
+        createRenderedTrayRows(
+            orderedPieceIds = remainingPieceIds,
+            dragState = dragState,
+            dropTarget = trayDropTarget,
+            traySlotWidths = trayLayout.slotWidths,
+            rowCount = trayRowCount,
+            topRowSize = trayTopRowSize,
+            pendingTrayRemovalPieceIds = pendingTrayRemovalPieceIds,
+        )
+    }
+    val renderedRows = remember(trayRows, trayRowCount) {
+        if (trayRowCount <= 1) listOf(trayRows.top) else listOf(trayRows.top, trayRows.bottom)
+    }
 
-    LazyRow(
-        state = state,
+    Box(
         modifier = Modifier
             .fillMaxWidth()
+            .horizontalScroll(scrollState)
             .onGloballyPositioned { coordinates ->
                 onTrayRowBoundsChanged(
                     coordinates
@@ -1165,61 +1238,66 @@ private fun LoosePiecesTrayRow(
                         .translatedBy(Offset(-overlayOriginInRoot.x, -overlayOriginInRoot.y)),
                 )
             },
-        contentPadding = PaddingValues(horizontal = trayHorizontalPadding),
-        horizontalArrangement = Arrangement.spacedBy(TrayItemSpacing),
     ) {
-        itemsIndexed(
-            items = trayEntries,
-            key = { _, entry -> entry.key },
-        ) { _, entry ->
-            when (entry) {
-                is TrayEntry.Piece -> {
-                    val pieceId = entry.pieceId
-                    val piece = piecesById.getValue(pieceId)
-                    val isHidden = pieceId in hiddenPieceIds
-                    TrayPieceCard(
-                        pieceId = pieceId,
-                        pieceCount = pieceCount,
-                        piece = piece,
-                        assetBitmap = assetBitmap,
-                        modifier = if (pieceId == draggedPieceId || pieceId == returningTrayPieceId) {
-                            Modifier
-                        } else {
-                            Modifier.animateItem()
-                        },
-                        boardCellWidth = trayReferenceCellWidth,
-                        boardCellHeight = trayReferenceCellHeight,
-                        slotSize = DpSize(
-                            width = trayLayout.slotWidths.getValue(pieceId),
-                            height = trayLayout.slotHeight,
-                        ),
-                        previewOffset = trayLayout.offsets.getValue(pieceId),
-                        overlayOriginInRoot = overlayOriginInRoot,
-                        collapsed = entry.collapsed,
-                        ghosted = pieceId == draggedPieceId || pieceId == returningTrayPieceId,
-                        highlight = if (pieceId in highlightedPieceIds) 1f else 0f,
-                        visible = !isHidden,
-                        onPositioned = { bounds ->
-                            onTrayItemBoundsChanged(pieceId, bounds)
-                        },
-                        onDragStarted = { touchOffset ->
-                            onTrayDragStarted(pieceId, piece, touchOffset)
-                        },
-                        onDragged = { dragAmount ->
-                            onTrayDragged(pieceId, dragAmount)
-                        },
-                        onDragEnded = {
-                            onTrayDragEnded(pieceId)
-                        },
-                    )
-                }
+        Column(
+            modifier = Modifier.padding(horizontal = trayHorizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(TrayRowSpacing),
+        ) {
+            renderedRows.forEach { rowEntries ->
+                Row(horizontalArrangement = Arrangement.spacedBy(TrayItemSpacing)) {
+                    rowEntries.forEach { entry ->
+                        key(entry.key) {
+                            when (entry) {
+                                is TrayEntry.Piece -> {
+                                    val pieceId = entry.pieceId
+                                    val piece = piecesById.getValue(pieceId)
+                                    val isHidden = pieceId in hiddenPieceIds
+                                    val isPendingTrayRemoval = pieceId in pendingTrayRemovalPieceIds
+                                    TrayPieceCard(
+                                        pieceId = pieceId,
+                                        pieceCount = pieceCount,
+                                        piece = piece,
+                                        assetBitmap = assetBitmap,
+                                        modifier = Modifier,
+                                        boardCellWidth = trayReferenceCellWidth,
+                                        boardCellHeight = trayReferenceCellHeight,
+                                        slotSize = DpSize(
+                                            width = trayLayout.slotWidths.getValue(pieceId),
+                                            height = trayLayout.slotHeight,
+                                        ),
+                                        previewOffset = trayLayout.offsets.getValue(pieceId),
+                                        overlayOriginInRoot = overlayOriginInRoot,
+                                        collapsed = entry.collapsed,
+                                        ghosted =
+                                            pieceId == draggedPieceId ||
+                                                pieceId == returningTrayPieceId ||
+                                                isPendingTrayRemoval,
+                                        highlight = if (pieceId in highlightedPieceIds) 1f else 0f,
+                                        visible = !isHidden,
+                                        onPositioned = { bounds ->
+                                            onTrayItemBoundsChanged(pieceId, bounds)
+                                        },
+                                        onDragStarted = { touchOffset ->
+                                            onTrayDragStarted(pieceId, piece, touchOffset)
+                                        },
+                                        onDragged = { dragAmount ->
+                                            onTrayDragged(pieceId, dragAmount)
+                                        },
+                                        onDragEnded = {
+                                            onTrayDragEnded(pieceId)
+                                        },
+                                    )
+                                }
 
-                is TrayEntry.Placeholder -> {
-                    TrayPlaceholderSlot(
-                        modifier = Modifier.animateItem(),
-                        width = entry.width,
-                        height = trayLayout.slotHeight,
-                    )
+                                is TrayEntry.Placeholder -> {
+                                    TrayPlaceholderSlot(
+                                        width = entry.width,
+                                        height = trayLayout.slotHeight,
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1539,8 +1617,7 @@ private data class TrayReturnAnimationState(
 )
 
 private data class TrayScrollSnapshot(
-    val firstVisibleItemIndex: Int,
-    val firstVisibleItemScrollOffset: Int,
+    val scrollOffset: Int,
 )
 
 private data class TrayLayoutPx(
@@ -1549,116 +1626,282 @@ private data class TrayLayoutPx(
     val offsets: Map<Int, Offset>,
 )
 
-private fun createTrayEntries(
+private data class TrayRows<T>(
+    val top: List<T>,
+    val bottom: List<T>,
+)
+
+private data class TrayDropTarget(
+    val rowIndex: Int,
+    val indexInRow: Int,
+)
+
+private fun stableTrayRowsForDrag(
     orderedPieceIds: List<Int>,
     dragState: PieceDragState?,
-    placeholderIndex: Int?,
-    traySlotWidths: Map<Int, Dp>,
-): List<TrayEntry> {
-    val collapsedPieceIds = if (dragState?.source == PieceDragSource.TRAY) {
-        dragState.clusterPieceIds
-    } else {
-        emptySet()
+    rowCount: Int,
+    topRowSize: Int,
+): TrayRows<Int> {
+    val baseRows = splitTrayPieceIds(orderedPieceIds, rowCount, topRowSize)
+    if (dragState?.source != PieceDragSource.TRAY || dragState.clusterPieceIds.isEmpty()) {
+        return baseRows
     }
-    val baseEntries = orderedPieceIds.map { pieceId ->
+
+    val top = baseRows.top.toMutableList()
+    val bottom = baseRows.bottom.toMutableList()
+    val sourceRow = if (dragState.pieceId in baseRows.bottom) bottom else top
+    sourceRow.removeAll(dragState.clusterPieceIds)
+    return TrayRows(top = top, bottom = bottom)
+}
+
+private fun splitTrayPieceIds(
+    pieceIds: List<Int>,
+    rowCount: Int,
+    topRowSize: Int = normalizedTrayTopRowSize(0, pieceIds.size, rowCount),
+): TrayRows<Int> {
+    if (rowCount <= 1) return TrayRows(top = pieceIds, bottom = emptyList())
+    val resolvedTopRowSize = normalizedTrayTopRowSize(topRowSize, pieceIds.size, rowCount)
+    return TrayRows(
+        top = pieceIds.take(resolvedTopRowSize),
+        bottom = pieceIds.drop(resolvedTopRowSize),
+    )
+}
+
+private fun createRenderedTrayRows(
+    orderedPieceIds: List<Int>,
+    dragState: PieceDragState?,
+    dropTarget: TrayDropTarget?,
+    traySlotWidths: Map<Int, Dp>,
+    rowCount: Int,
+    topRowSize: Int,
+    pendingTrayRemovalPieceIds: Set<Int>,
+): TrayRows<TrayEntry> {
+    val renderOrderedPieceIds = if (pendingTrayRemovalPieceIds.isEmpty()) {
+        orderedPieceIds
+    } else {
+        removeFromTrayRows(
+            orderedPieceIds = orderedPieceIds,
+            removedPieceIds = pendingTrayRemovalPieceIds,
+            rowCount = rowCount,
+            topRowSize = topRowSize,
+        )
+            .let { rows -> rows.top + rows.bottom }
+    }
+    val baseRows = splitTrayPieceIds(renderOrderedPieceIds, rowCount, topRowSize)
+    val movedPieceIds = dragState?.clusterPieceIds.orEmpty()
+    val collapsedPieceIds =
+        if (dragState?.source == PieceDragSource.TRAY) movedPieceIds else emptySet()
+    val top: MutableList<TrayEntry> = baseRows.top.mapTo(mutableListOf()) { pieceId ->
         TrayEntry.Piece(
             pieceId = pieceId,
             collapsed = pieceId in collapsedPieceIds,
         )
-    }.toMutableList<TrayEntry>()
-
-    if (dragState == null || placeholderIndex == null || dragState.clusterPieceIds.isEmpty()) {
-        return baseEntries
+    }
+    val bottom: MutableList<TrayEntry> = baseRows.bottom.mapTo(mutableListOf()) { pieceId ->
+        TrayEntry.Piece(
+            pieceId = pieceId,
+            collapsed = pieceId in collapsedPieceIds,
+        )
     }
 
-    val movablePieceIds = orderedPieceIds.filterNot { it in dragState.clusterPieceIds }
-    val insertionIndex = placeholderIndex.coerceIn(0, movablePieceIds.size)
-    var visiblePieceIndex = 0
-    var entryInsertIndex = baseEntries.size
-    baseEntries.forEachIndexed { index, entry ->
-        if (entry !is TrayEntry.Piece || entry.collapsed) return@forEachIndexed
-        if (visiblePieceIndex == insertionIndex) {
-            entryInsertIndex = index
-            return@forEachIndexed
-        }
-        visiblePieceIndex += 1
-    }
-    if (insertionIndex == 0) {
-        entryInsertIndex = 0
-    } else if (insertionIndex >= visiblePieceIndex) {
-        entryInsertIndex = baseEntries.size
-    }
-
-    val placeholderWidth =
-        dragState.clusterPieceIds.sumOf { pieceId ->
-            traySlotWidths.getValue(pieceId).value.toDouble()
-        }.dp + (TrayItemSpacing * (dragState.clusterPieceIds.size - 1).coerceAtLeast(0).toFloat())
-    baseEntries.add(entryInsertIndex, TrayEntry.Placeholder(width = placeholderWidth))
-    return baseEntries
+    return TrayRows(
+        top = top,
+        bottom = bottom,
+    )
 }
 
-private fun calculateTrayDropIndex(
+private fun normalizedTrayTopRowSize(
+    topRowSizeHint: Int,
+    totalCount: Int,
+    rowCount: Int,
+): Int {
+    if (rowCount <= 1) return totalCount
+    val minTopRowSize = totalCount / 2
+    val maxTopRowSize = (totalCount + 1) / 2
+    return topRowSizeHint.coerceIn(minTopRowSize, maxTopRowSize)
+}
+
+private fun rebalanceTrayPieceRows(
+    top: MutableList<Int>,
+    bottom: MutableList<Int>,
+) {
+    while (top.size > bottom.size + 1) {
+        bottom.add(top.removeAt(top.lastIndex))
+    }
+    while (bottom.size > top.size + 1) {
+        top.add(bottom.removeAt(bottom.lastIndex))
+    }
+}
+
+private fun reorderTrayRows(
+    orderedPieceIds: List<Int>,
+    dragState: PieceDragState,
+    dropTarget: TrayDropTarget,
+    rowCount: Int,
+    topRowSize: Int,
+): TrayRows<Int> {
+    val movedPieceIds = dragState.clusterPieceIds
+    val movedBlock = orderedPieceIds.filter { it in movedPieceIds }
+    val baseRows = splitTrayPieceIds(orderedPieceIds, rowCount, topRowSize)
+    val top = baseRows.top.filterNot { it in movedPieceIds }.toMutableList()
+    val bottom = baseRows.bottom.filterNot { it in movedPieceIds }.toMutableList()
+    val targetRow = if (dropTarget.rowIndex == 0) top else bottom
+    targetRow.addAll(dropTarget.indexInRow.coerceIn(0, targetRow.size), movedBlock)
+    rebalanceTrayPieceRows(top, bottom)
+    return TrayRows(top = top, bottom = bottom)
+}
+
+private fun removeFromTrayRows(
+    orderedPieceIds: List<Int>,
+    removedPieceIds: Set<Int>,
+    rowCount: Int,
+    topRowSize: Int,
+): TrayRows<Int> {
+    val baseRows = splitTrayPieceIds(orderedPieceIds, rowCount, topRowSize)
+    val top = baseRows.top.filterNot { it in removedPieceIds }.toMutableList()
+    val bottom = baseRows.bottom.filterNot { it in removedPieceIds }.toMutableList()
+    rebalanceTrayPieceRows(top, bottom)
+    return TrayRows(top = top, bottom = bottom)
+}
+
+private fun applyRemainingPieceOrder(
+    state: JigsawSessionState,
+    reorderedRemaining: List<Int>,
+): JigsawSessionState {
+    val remainingSet = state.remainingPieceIds.toSet()
+    val hiddenPieceIdsInOrder = state.pieceOrder.filterNot { it in remainingSet }
+    return state.copy(
+        pieceOrder = reorderedRemaining + hiddenPieceIdsInOrder,
+    )
+}
+
+private fun calculateTrayContentWidth(
+    orderedPieceIds: List<Int>,
+    traySlotWidths: Map<Int, Dp>,
+    rowCount: Int,
+    topRowSize: Int,
+): Dp {
+    val rows = splitTrayPieceIds(orderedPieceIds, rowCount, topRowSize)
+    return listOf(rows.top, rows.bottom).maxOfOrNull { rowPieceIds ->
+        if (rowPieceIds.isEmpty()) {
+            0.0
+        } else {
+            rowPieceIds.sumOf { pieceId -> traySlotWidths.getValue(pieceId).value.toDouble() } +
+                (TrayItemSpacing.value.toDouble() * (rowPieceIds.size - 1).coerceAtLeast(0))
+        }
+    }?.dp ?: 0.dp
+}
+
+private fun calculateTrayDropTarget(
     dragState: PieceDragState?,
     trayRowBounds: Rect?,
     orderedPieceIds: List<Int>,
     trayItemBounds: Map<Int, Rect>,
-): Int? {
-    if (dragState == null || trayRowBounds == null || !trayRowBounds.contains(dragState.currentPointer)) {
+    rowCount: Int,
+    topRowSize: Int,
+    traySlotHeightPx: Float,
+    trayRowSpacingPx: Float,
+): TrayDropTarget? {
+    if (dragState == null || !isDragOverTray(dragState, trayRowBounds)) {
         return null
     }
-    val stablePieceIds = orderedPieceIds.filterNot { it in dragState.clusterPieceIds }
-    if (stablePieceIds.isEmpty()) return 0
+    val resolvedTrayRowBounds = trayRowBounds ?: return null
+    val rows = stableTrayRowsForDrag(
+        orderedPieceIds = orderedPieceIds,
+        dragState = dragState,
+        rowCount = rowCount,
+        topRowSize = topRowSize,
+    )
+    if (rows.top.isEmpty() && rows.bottom.isEmpty()) return TrayDropTarget(rowIndex = 0, indexInRow = 0)
 
-    val draggedCenterX = dragState.currentSelectedPieceCenter(trayRowBounds).x
-    stablePieceIds.forEachIndexed { index, pieceId ->
+    val draggedCenter = dragState.currentSelectedPieceCenter(resolvedTrayRowBounds)
+    val rowDividerY = if (rowCount <= 1 || rows.bottom.isEmpty()) {
+        resolvedTrayRowBounds.center.y
+    } else {
+        resolvedTrayRowBounds.top + traySlotHeightPx + (trayRowSpacingPx / 2f)
+    }
+    val targetRowIndex = if (rowCount <= 1 || draggedCenter.y < rowDividerY) 0 else 1
+    val targetRowPieceIds = if (targetRowIndex == 0) rows.top else rows.bottom
+    targetRowPieceIds.forEachIndexed { rowIndex, pieceId ->
         val bounds = trayItemBounds[pieceId] ?: return@forEachIndexed
-        if (draggedCenterX < bounds.center.x) {
-            return index
+        if (draggedCenter.x < bounds.center.x) {
+            return TrayDropTarget(rowIndex = targetRowIndex, indexInRow = rowIndex)
         }
     }
-    return stablePieceIds.size
+    return TrayDropTarget(rowIndex = targetRowIndex, indexInRow = targetRowPieceIds.size)
+}
+
+private fun isDragOverTray(
+    dragState: PieceDragState,
+    trayRowBounds: Rect?,
+): Boolean {
+    val bounds = trayRowBounds ?: return false
+    return when (dragState.source) {
+        PieceDragSource.TRAY -> bounds.contains(dragState.currentPointer)
+        PieceDragSource.BOARD -> bounds.contains(dragState.currentSelectedPieceCenter(trayRowBounds))
+    }
 }
 
 private fun resolveTrayReturnAnimation(
     pieceId: Int,
-    movedPieceIds: Set<Int>,
     startTopLeft: Offset,
-    insertionIndex: Int,
     orderedPieceIds: List<Int>,
     trayItemBounds: Map<Int, Rect>,
     trayLayoutPx: TrayLayoutPx,
     trayRowBounds: Rect?,
     trayItemSpacingPx: Float,
+    rowCount: Int,
+    topRowSize: Int,
+    rowSpacingPx: Float,
 ): PendingTrayReturnAnimation? {
     val movedOffset = trayLayoutPx.offsets.getValue(pieceId)
-    val stablePieceIds = orderedPieceIds.filterNot { it in movedPieceIds }
+    val stablePieceIds = orderedPieceIds.filterNot { it == pieceId }
+    val rows = splitTrayPieceIds(orderedPieceIds, rowCount, topRowSize)
+    val targetRowIndex = if (pieceId in rows.bottom) 1 else 0
+    val targetRowPieceIds = if (targetRowIndex == 0) rows.top else rows.bottom
+    val targetIndexInRow = targetRowPieceIds.indexOf(pieceId).coerceAtLeast(0)
+    val stableRowPieceIds = targetRowPieceIds.filterNot { it == pieceId }
+    val previousPieceId = stableRowPieceIds.getOrNull(targetIndexInRow - 1)
+    val nextPieceId = stableRowPieceIds.getOrNull(targetIndexInRow)
 
-    val targetSlotTop = when {
+    val topRowTop = rows.top
+        .firstNotNullOfOrNull { rowPieceId ->
+            trayItemBounds[rowPieceId]?.top?.minus(trayLayoutPx.offsets.getValue(rowPieceId).y)
+        }
+        ?: rows.bottom.firstNotNullOfOrNull { rowPieceId ->
+            trayItemBounds[rowPieceId]
+                ?.top
+                ?.minus(trayLayoutPx.offsets.getValue(rowPieceId).y)
+                ?.minus(trayLayoutPx.slotHeight + rowSpacingPx)
+        }
+        ?: trayRowBounds?.top
+        ?: (startTopLeft.y - movedOffset.y)
+
+    val targetSlotTop = topRowTop + (targetRowIndex * (trayLayoutPx.slotHeight + rowSpacingPx))
+
+    val targetSlotLeft = when {
+        previousPieceId != null -> {
+            val previousBounds = trayItemBounds[previousPieceId] ?: return null
+            (previousBounds.left - trayLayoutPx.offsets.getValue(previousPieceId).x) +
+                trayLayoutPx.slotWidths.getValue(previousPieceId) +
+                trayItemSpacingPx
+        }
+
+        nextPieceId != null -> {
+            val nextBounds = trayItemBounds[nextPieceId] ?: return null
+            (nextBounds.left - trayLayoutPx.offsets.getValue(nextPieceId).x) -
+                trayLayoutPx.slotWidths.getValue(pieceId) -
+                trayItemSpacingPx
+        }
+
         stablePieceIds.isNotEmpty() -> {
             val referencePieceId = stablePieceIds.first()
             val referenceBounds = trayItemBounds[referencePieceId] ?: return null
-            referenceBounds.top - trayLayoutPx.offsets.getValue(referencePieceId).y
+            referenceBounds.left - trayLayoutPx.offsets.getValue(referencePieceId).x
         }
 
-        trayRowBounds != null -> trayRowBounds.top
-        else -> startTopLeft.y - movedOffset.y
-    }
-
-    val targetSlotLeft = when {
-        stablePieceIds.isEmpty() -> trayRowBounds?.left ?: (startTopLeft.x - movedOffset.x)
-        insertionIndex < stablePieceIds.size -> {
-            val anchorPieceId = stablePieceIds[insertionIndex]
-            val anchorBounds = trayItemBounds[anchorPieceId] ?: return null
-            anchorBounds.left - trayLayoutPx.offsets.getValue(anchorPieceId).x
-        }
-
-        else -> {
-            val anchorPieceId = stablePieceIds.last()
-            val anchorBounds = trayItemBounds[anchorPieceId] ?: return null
-            (anchorBounds.left - trayLayoutPx.offsets.getValue(anchorPieceId).x) +
-                trayLayoutPx.slotWidths.getValue(anchorPieceId) +
-                trayItemSpacingPx
-        }
+        trayRowBounds != null -> trayRowBounds.left
+        else -> startTopLeft.x - movedOffset.x
     }
 
     return PendingTrayReturnAnimation(
@@ -1816,6 +2059,7 @@ private fun Rect.toAndroidRect(): AndroidRect = AndroidRect(
 private val BoardInnerPadding = 12.dp
 private val ScreenHorizontalPadding = 16.dp
 private val TrayItemSpacing = 2.dp
+private val TrayRowSpacing = 4.dp
 private const val TrayWidthSlackFactor = 0.2f
 private const val TrayReferenceColumns = 6
 private const val TrayReferenceRows = 8
@@ -1829,3 +2073,4 @@ private const val BoardSnapThreshold = 0.28f
 private const val TrayPieceDragVerticalBias = 0.65f
 private const val TrayPieceLiftOffsetPx = 150f
 private const val TrayPieceResizeTravelFraction = 0.22f
+private const val TraySecondRowMinVisibleFraction = 2f / 3f

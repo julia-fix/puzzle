@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,6 +62,14 @@ fun JigsawNavGraph() {
     var isUploadInProgress by remember { mutableStateOf(false) }
     var galleryMessage by remember { mutableStateOf<String?>(null) }
     var pendingImportedImageId by remember { mutableStateOf<String?>(null) }
+    val latestPendingUploadImport by rememberUpdatedState(pendingUploadImport)
+
+    fun updatePendingUploadImport(next: PendingUploadImport?) {
+        pendingUploadImport = replacePendingUploadImport(
+            current = pendingUploadImport,
+            next = next,
+        )
+    }
 
     suspend fun refreshImages(): List<PuzzleImage> {
         val loadedImages = catalogRepository.loadImages()
@@ -83,6 +93,12 @@ fun JigsawNavGraph() {
         )
     }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            latestPendingUploadImport?.release()
+        }
+    }
+
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { selectedUri ->
@@ -92,15 +108,17 @@ fun JigsawNavGraph() {
         scope.launch {
             isUploadInProgress = true
             val preparedImport = catalogRepository.prepareUserImageImport(selectedUri)
-            pendingUploadImport = preparedImport?.let { prepared ->
-                PendingUploadImport(
-                    preparedImport = prepared,
-                    cropState = GalleryUploadCropState(
-                        bitmap = prepared.bitmap.asImageBitmap(),
-                        title = prepared.title,
-                    ),
-                )
-            }
+            updatePendingUploadImport(
+                preparedImport?.let { prepared ->
+                    PendingUploadImport(
+                        preparedImport = prepared,
+                        cropState = GalleryUploadCropState(
+                            bitmap = prepared.bitmap.asImageBitmap(),
+                            title = prepared.title,
+                        ),
+                    )
+                },
+            )
             if (preparedImport == null) {
                 galleryMessage = context.getString(GalleryR.string.gallery_upload_prepare_error)
             }
@@ -127,28 +145,31 @@ fun JigsawNavGraph() {
                 uploadCropState = pendingUploadImport?.cropState,
                 onUploadCropDismiss = {
                     if (!isUploadInProgress) {
-                        pendingUploadImport = null
+                        updatePendingUploadImport(null)
                     }
                 },
                 onUploadCropConfirm = { selection ->
                     val pendingImport = pendingUploadImport ?: return@GalleryScreen
                     scope.launch {
                         isUploadInProgress = true
-                        val importedImage = catalogRepository.importPreparedUserImage(
-                            preparedImport = pendingImport.preparedImport,
-                            cropLeft = selection.left,
-                            cropTop = selection.top,
-                            cropRight = selection.right,
-                            cropBottom = selection.bottom,
-                        )
-                        pendingUploadImport = null
-                        if (importedImage == null) {
-                            galleryMessage = context.getString(GalleryR.string.gallery_upload_import_error)
-                        } else {
-                            refreshImages()
-                            pendingImportedImageId = importedImage.id
+                        try {
+                            val importedImage = catalogRepository.importPreparedUserImage(
+                                preparedImport = pendingImport.preparedImport,
+                                cropLeft = selection.left,
+                                cropTop = selection.top,
+                                cropRight = selection.right,
+                                cropBottom = selection.bottom,
+                            )
+                            if (importedImage == null) {
+                                galleryMessage = context.getString(GalleryR.string.gallery_upload_import_error)
+                            } else {
+                                refreshImages()
+                                pendingImportedImageId = importedImage.id
+                            }
+                        } finally {
+                            updatePendingUploadImport(null)
+                            isUploadInProgress = false
                         }
-                        isUploadInProgress = false
                     }
                 },
                 isUploadInProgress = isUploadInProgress,
@@ -239,4 +260,22 @@ private fun MissingArgumentState() {
 private data class PendingUploadImport(
     val preparedImport: PreparedUserImageImport,
     val cropState: GalleryUploadCropState,
-)
+) : ReleasablePendingUploadImport {
+    override fun release() {
+        preparedImport.recycle()
+    }
+}
+
+internal interface ReleasablePendingUploadImport {
+    fun release()
+}
+
+internal fun <T : ReleasablePendingUploadImport> replacePendingUploadImport(
+    current: T?,
+    next: T?,
+): T? {
+    if (current !== next) {
+        current?.release()
+    }
+    return next
+}

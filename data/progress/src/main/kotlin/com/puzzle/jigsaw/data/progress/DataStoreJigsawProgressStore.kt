@@ -88,35 +88,7 @@ class DataStoreJigsawProgressStore(
     }
 
     override fun recentSessions(): Flow<List<RecentPuzzleSession>> = safePreferences().map { preferences ->
-        preferences.asMap()
-            .entries
-            .mapNotNull { (rawKey, value) ->
-                val keyName = rawKey.name
-                if (!keyName.startsWith(PROGRESS_PREFIX) || value !is String) {
-                    return@mapNotNull null
-                }
-
-                val sessionDescriptor = keyName.removePrefix(PROGRESS_PREFIX)
-                val separatorIndex = sessionDescriptor.lastIndexOf(':')
-                if (separatorIndex == -1) {
-                    return@mapNotNull null
-                }
-
-                val imageId = sessionDescriptor.substring(0, separatorIndex)
-                val pieceCount = sessionDescriptor.substring(separatorIndex + 1).toIntOrNull()
-                    ?: return@mapNotNull null
-                val updatedAt = preferences[updatedKey(imageId, pieceCount)] ?: return@mapNotNull null
-                val placedPieces = decodeProgressPayload(value).placedPieceIds.size
-
-                RecentPuzzleSession(
-                    imageId = imageId,
-                    pieceCount = pieceCount,
-                    placedPieces = placedPieces,
-                    updatedAtEpochMillis = updatedAt,
-                )
-            }
-            .sortedByDescending(RecentPuzzleSession::updatedAtEpochMillis)
-            .take(8)
+        preferences.asStoredProgressRecords().toRecentPuzzleSessions()
     }
 
     private fun safePreferences(): Flow<Preferences> = dataStore.data.catch { throwable ->
@@ -161,6 +133,10 @@ internal fun migrateStoredProgressRecordsForTest(
     records: List<StoredProgressRecord>,
     idMappings: Map<String, String>,
 ): List<StoredProgressRecord> = migrateStoredProgressRecords(records, idMappings)
+
+internal fun recentPuzzleSessionsFromRecordsForTest(
+    records: List<StoredProgressRecord>,
+): List<RecentPuzzleSession> = records.toRecentPuzzleSessions()
 
 private fun encodeProgressPayload(progress: JigsawProgress): String = buildString {
     append(PROGRESS_FORMAT_VERSION)
@@ -309,3 +285,12 @@ private fun migrateStoredProgressRecords(
         compareBy<StoredProgressRecord>(StoredProgressRecord::imageId)
             .thenBy(StoredProgressRecord::pieceCount),
     )
+
+private fun List<StoredProgressRecord>.toRecentPuzzleSessions(): List<RecentPuzzleSession> = map { record ->
+    RecentPuzzleSession(
+        imageId = record.imageId,
+        pieceCount = record.pieceCount,
+        placedPieces = decodeProgressPayload(record.payload).placedPieceIds.size,
+        updatedAtEpochMillis = record.updatedAtEpochMillis,
+    )
+}.sortedByDescending(RecentPuzzleSession::updatedAtEpochMillis)

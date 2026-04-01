@@ -9,7 +9,13 @@ import java.util.UUID
 data class PreparedUserImageImport(
     val bitmap: Bitmap,
     val title: String,
-)
+) {
+    fun recycle() {
+        if (!bitmap.isRecycled) {
+            bitmap.recycle()
+        }
+    }
+}
 
 internal data class UploadedPuzzleMetadata(
     val id: String,

@@ -113,4 +113,22 @@ class DataStoreJigsawProgressStoreTest {
         assertEquals("animals/fullsize/cat.webp", migrated.single().imageId)
         assertEquals("new", migrated.single().payload)
     }
+
+    @Test
+    fun `recentPuzzleSessionsFromRecordsForTest keeps all saved sessions instead of truncating to eight`() {
+        val records = (1..9).map { index ->
+            StoredProgressRecord(
+                imageId = "image-$index",
+                pieceCount = 24,
+                payload = "v3|$index||",
+                updatedAtEpochMillis = index.toLong(),
+            )
+        }
+
+        val sessions = recentPuzzleSessionsFromRecordsForTest(records)
+
+        assertEquals(9, sessions.size)
+        assertEquals("image-9", sessions.first().imageId)
+        assertEquals("image-1", sessions.last().imageId)
+    }
 }

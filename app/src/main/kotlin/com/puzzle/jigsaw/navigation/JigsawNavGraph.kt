@@ -70,10 +70,6 @@ fun JigsawNavGraph() {
 
     LaunchedEffect(catalogRepository, progressStore) {
         refreshImages()
-        catalogRepository.syncIfNeeded()?.let { syncedImages ->
-            progressStore.migrateLegacyImageIds(legacyImageIdMappings(syncedImages))
-            images = syncedImages
-        }
     }
 
     LaunchedEffect(images, pendingImportedImageId) {

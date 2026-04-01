@@ -3,7 +3,11 @@
     <string name="gameplay_title_in_progress">Assemble the puzzle</string>
     <string name="gameplay_title_completed">Puzzle completed</string>
     <string name="gameplay_progress_summary">%1$s • %2$d%% complete</string>
+    <string name="gameplay_progress_percent">%1$d%% complete</string>
     <string name="gameplay_reset">Reset</string>
+    <string name="gameplay_background_picker">Choose background</string>
+    <string name="gameplay_background_picker_title">Background</string>
+    <string name="gameplay_background_sample">Background sample %1$d</string>
     <string name="gameplay_loose_pieces_title">Loose pieces</string>
     <string name="gameplay_reset_dialog_title">Reset puzzle?</string>
     <string name="gameplay_reset_dialog_message">Current progress for this puzzle size will be cleared.</string>

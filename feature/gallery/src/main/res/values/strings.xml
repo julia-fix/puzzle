@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="gallery_title">Choose an image</string>
+    <string name="gallery_title">Puzzles</string>
     <string name="gallery_filter_all">All</string>
+    <string name="gallery_upload_action">Upload</string>
+    <string name="gallery_upload_crop_title">Make it your puzzle</string>
+    <string name="gallery_upload_crop_hint">Move your photo to pick the best crop.</string>
+    <string name="gallery_upload_cancel">Cancel</string>
+    <string name="gallery_upload_use_image">Use image</string>
+    <string name="gallery_upload_prepare_error">Couldn’t open that image.</string>
+    <string name="gallery_upload_import_error">Couldn’t import that image.</string>
+    <string name="gallery_category_uploads">Uploads</string>
     <string name="gallery_category_nature">Nature</string>
     <string name="gallery_category_sunsets">Sunsets</string>
     <string name="gallery_category_city">City</string>

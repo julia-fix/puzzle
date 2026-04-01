@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="gallery_title">Выберите изображение</string>
+    <string name="gallery_title">Паззлы</string>
     <string name="gallery_filter_all">Все</string>
+    <string name="gallery_upload_action">Загрузить</string>
+    <string name="gallery_upload_crop_title">Создайте свой паззл</string>
+    <string name="gallery_upload_crop_hint">Перемещайте фото, чтобы выбрать лучший кадр.</string>
+    <string name="gallery_upload_cancel">Отмена</string>
+    <string name="gallery_upload_use_image">Использовать фото</string>
+    <string name="gallery_upload_prepare_error">Не удалось открыть это изображение.</string>
+    <string name="gallery_upload_import_error">Не удалось импортировать это изображение.</string>
+    <string name="gallery_category_uploads">Загрузки</string>
     <string name="gallery_category_nature">Природа</string>
     <string name="gallery_category_sunsets">Закаты</string>
     <string name="gallery_category_city">Город</string>

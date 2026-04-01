@@ -14,15 +14,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import com.puzzle.jigsaw.core.model.PuzzleImageStorage
+import java.io.File
 
 const val PuzzleImageAspectRatio = 4f / 5f
 
 @Composable
-fun rememberPuzzleAssetBitmap(assetPath: String): ImageBitmap? {
+fun rememberPuzzleBitmap(
+    path: String,
+    storage: PuzzleImageStorage,
+): ImageBitmap? {
     val context = LocalContext.current
-    val bitmap = produceState<ImageBitmap?>(initialValue = null, assetPath) {
+    val bitmap = produceState<ImageBitmap?>(initialValue = null, path, storage) {
         value = runCatching {
-            context.assets.open(assetPath).use(BitmapFactory::decodeStream)?.asImageBitmap()
+            when (storage) {
+                PuzzleImageStorage.ASSET -> context.assets.open(path)
+                PuzzleImageStorage.FILE -> File(path).inputStream()
+            }.use(BitmapFactory::decodeStream)?.asImageBitmap()
         }.getOrNull()
     }
 
@@ -30,12 +38,23 @@ fun rememberPuzzleAssetBitmap(assetPath: String): ImageBitmap? {
 }
 
 @Composable
-fun PuzzleAssetImage(
-    assetPath: String,
+fun rememberPuzzleAssetBitmap(assetPath: String): ImageBitmap? =
+    rememberPuzzleBitmap(
+        path = assetPath,
+        storage = PuzzleImageStorage.ASSET,
+    )
+
+@Composable
+fun PuzzleBitmapImage(
+    path: String,
+    storage: PuzzleImageStorage,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
 ) {
-    val bitmap = rememberPuzzleAssetBitmap(assetPath)
+    val bitmap = rememberPuzzleBitmap(
+        path = path,
+        storage = storage,
+    )
 
     if (bitmap == null) {
         Box(
@@ -50,5 +69,19 @@ fun PuzzleAssetImage(
         contentDescription = null,
         contentScale = contentScale,
         modifier = modifier.fillMaxSize(),
+    )
+}
+
+@Composable
+fun PuzzleAssetImage(
+    assetPath: String,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Crop,
+) {
+    PuzzleBitmapImage(
+        path = assetPath,
+        storage = PuzzleImageStorage.ASSET,
+        modifier = modifier,
+        contentScale = contentScale,
     )
 }

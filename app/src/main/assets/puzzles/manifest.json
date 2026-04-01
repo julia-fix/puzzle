@@ -1,40 +1,939 @@
 {
+  "schemaVersion": 2,
+  "revision": "2026-03-30T14:55:10.533Z",
+  "categories": [
+    {
+      "id": "animals",
+      "names": {
+        "en": "Animals",
+        "ru": "Животные"
+      }
+    },
+    {
+      "id": "buildings",
+      "names": {
+        "en": "Buildings",
+        "ru": "Здания"
+      }
+    },
+    {
+      "id": "fantasy",
+      "names": {
+        "en": "Fantasy",
+        "ru": "Фэнтези"
+      }
+    },
+    {
+      "id": "flowers",
+      "names": {
+        "en": "Flowers",
+        "ru": "Цветы"
+      }
+    },
+    {
+      "id": "nature",
+      "names": {
+        "en": "Nature",
+        "ru": "Природа"
+      }
+    },
+    {
+      "id": "still_life",
+      "names": {
+        "en": "Still Life",
+        "ru": "Натюрморт"
+      }
+    }
+  ],
   "images": [
     {
-      "id": "p1",
-      "fileName": "p1.webp",
-      "title": "Emerald Valley",
-      "subtitle": "Misty ridges",
-      "description": "Layered green hills with morning light.",
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/0d39b0c4-9f13-45d9-b1b6-f5b1b5a01191_thumb.webp",
+      "path": "animals/fullsize/0d39b0c4-9f13-45d9-b1b6-f5b1b5a01191.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/1d98ab71-95df-44e6-ba82-af53e8d4fdcb_thumb.webp",
+      "path": "animals/fullsize/1d98ab71-95df-44e6-ba82-af53e8d4fdcb.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/22d20e33-385d-4ffa-83d3-a861f947be5a_thumb.webp",
+      "path": "animals/fullsize/22d20e33-385d-4ffa-83d3-a861f947be5a.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/24a3e5c5-e96d-4158-99aa-3f04591045a3_thumb.webp",
+      "path": "animals/fullsize/24a3e5c5-e96d-4158-99aa-3f04591045a3.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/2ce9b303-1b35-428a-9438-b84a675e951f_thumb.webp",
+      "path": "animals/fullsize/2ce9b303-1b35-428a-9438-b84a675e951f.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/43c4e4c3-f00b-4358-8c52-5b317b33db66_thumb.webp",
+      "path": "animals/fullsize/43c4e4c3-f00b-4358-8c52-5b317b33db66.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/4aabda75-d5a8-435c-b9a5-a530c7e01584_thumb.webp",
+      "path": "animals/fullsize/4aabda75-d5a8-435c-b9a5-a530c7e01584.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/4be22414-079b-4496-9dc1-33f4328fd026_thumb.webp",
+      "path": "animals/fullsize/4be22414-079b-4496-9dc1-33f4328fd026.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/57ea4657-46ee-4616-a546-4ee7814c86b8_thumb.webp",
+      "path": "animals/fullsize/57ea4657-46ee-4616-a546-4ee7814c86b8.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/598d79d2-7b84-48d9-9936-30296e88759b_thumb.webp",
+      "path": "animals/fullsize/598d79d2-7b84-48d9-9936-30296e88759b.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/663999dd-af9d-46fc-ad74-16e7c78ffe53_thumb.webp",
+      "path": "animals/fullsize/663999dd-af9d-46fc-ad74-16e7c78ffe53.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/7080761d-7cef-4756-8a5d-6a98c18a1b8b_thumb.webp",
+      "path": "animals/fullsize/7080761d-7cef-4756-8a5d-6a98c18a1b8b.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/70eb2454-f7eb-4e7c-aab8-63f3128ca972_thumb.webp",
+      "path": "animals/fullsize/70eb2454-f7eb-4e7c-aab8-63f3128ca972.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/729eea0e-4f82-4828-8845-66ee05956547_thumb.webp",
+      "path": "animals/fullsize/729eea0e-4f82-4828-8845-66ee05956547.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/730e74f7-e75e-499c-b605-142fc42a3154_thumb.webp",
+      "path": "animals/fullsize/730e74f7-e75e-499c-b605-142fc42a3154.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/7573d31c-c606-4294-94e8-ddf67b2e963e_thumb.webp",
+      "path": "animals/fullsize/7573d31c-c606-4294-94e8-ddf67b2e963e.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/7ad3f956-f831-4273-9fe3-30d1e0282a4f_thumb.webp",
+      "path": "animals/fullsize/7ad3f956-f831-4273-9fe3-30d1e0282a4f.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/83a50040-f9de-4ab9-8ed0-59d726df3a68_thumb.webp",
+      "path": "animals/fullsize/83a50040-f9de-4ab9-8ed0-59d726df3a68.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/87901f3d-7337-4866-8046-81d9eb5698e3_thumb.webp",
+      "path": "animals/fullsize/87901f3d-7337-4866-8046-81d9eb5698e3.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/8b7aa7e8-dc71-4dcc-a7d0-66ca76ef5c83_thumb.webp",
+      "path": "animals/fullsize/8b7aa7e8-dc71-4dcc-a7d0-66ca76ef5c83.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/8bc407c7-b219-4d17-84cf-b2c5689d4a02_thumb.webp",
+      "path": "animals/fullsize/8bc407c7-b219-4d17-84cf-b2c5689d4a02.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/a90e9ed7-6f44-4cac-9cb4-a5b5c6ab1804_thumb.webp",
+      "path": "animals/fullsize/a90e9ed7-6f44-4cac-9cb4-a5b5c6ab1804.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/b2abeb72-038b-47c2-9bfc-b49ef26a0497_thumb.webp",
+      "path": "animals/fullsize/b2abeb72-038b-47c2-9bfc-b49ef26a0497.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/daa0a474-cfcd-44bc-9578-d73239e5fafc_thumb.webp",
+      "path": "animals/fullsize/daa0a474-cfcd-44bc-9578-d73239e5fafc.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/df02e121-e881-44ef-9b6d-d7a7dc6543b9_thumb.webp",
+      "path": "animals/fullsize/df02e121-e881-44ef-9b6d-d7a7dc6543b9.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/e3df0b22-c909-4f7b-8ae0-869709342a4e_thumb.webp",
+      "path": "animals/fullsize/e3df0b22-c909-4f7b-8ae0-869709342a4e.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/ed2ac8c0-a437-4490-b729-7b630ad651fe_thumb.webp",
+      "path": "animals/fullsize/ed2ac8c0-a437-4490-b729-7b630ad651fe.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/f1040063-6bd7-4578-8f6a-27d60a1391f3_thumb.webp",
+      "path": "animals/fullsize/f1040063-6bd7-4578-8f6a-27d60a1391f3.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/f17f59db-8d69-4d08-a546-042dd2d793d4_thumb.webp",
+      "path": "animals/fullsize/f17f59db-8d69-4d08-a546-042dd2d793d4.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/f40b9c8d-087d-4f14-b46e-16965e6673bb_thumb.webp",
+      "path": "animals/fullsize/f40b9c8d-087d-4f14-b46e-16965e6673bb.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/f99c698e-97c0-4526-a08f-7d2ca4a32282_thumb.webp",
+      "path": "animals/fullsize/f99c698e-97c0-4526-a08f-7d2ca4a32282.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "animals",
+      "previewPath": "animals/thumbnails/fb884a8c-410f-4ce8-b3db-6b36c73f25f9_thumb.webp",
+      "path": "animals/fullsize/fb884a8c-410f-4ce8-b3db-6b36c73f25f9.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/04d4dbe7-dd34-44f3-bb53-54ad0aa4bd61_thumb.webp",
+      "path": "buildings/fullsize/04d4dbe7-dd34-44f3-bb53-54ad0aa4bd61.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/0bf16960-abee-4409-a8cb-e7ee4d2975a0_thumb.webp",
+      "path": "buildings/fullsize/0bf16960-abee-4409-a8cb-e7ee4d2975a0.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/11014e80-589e-4993-a06e-74b1d2c7fa35_thumb.webp",
+      "path": "buildings/fullsize/11014e80-589e-4993-a06e-74b1d2c7fa35.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/1d9305ae-35f6-4167-b634-4080f8fd48d8_thumb.webp",
+      "path": "buildings/fullsize/1d9305ae-35f6-4167-b634-4080f8fd48d8.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/2d58a64c-592e-4fe1-8f37-458c0d805319_thumb.webp",
+      "path": "buildings/fullsize/2d58a64c-592e-4fe1-8f37-458c0d805319.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/62a21899-41be-4a4d-aab6-d6b4c3ababae_thumb.webp",
+      "path": "buildings/fullsize/62a21899-41be-4a4d-aab6-d6b4c3ababae.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/63fb876b-943a-4d74-ad1a-341e91002b84_thumb.webp",
+      "path": "buildings/fullsize/63fb876b-943a-4d74-ad1a-341e91002b84.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/7c741dfc-8d3f-4920-83ee-194e64e4ab58_thumb.webp",
+      "path": "buildings/fullsize/7c741dfc-8d3f-4920-83ee-194e64e4ab58.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/97dfce53-90da-4712-9991-0b04f01a69d7_thumb.webp",
+      "path": "buildings/fullsize/97dfce53-90da-4712-9991-0b04f01a69d7.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/999ef814-13e2-4897-bb19-44c60158ccfa_thumb.webp",
+      "path": "buildings/fullsize/999ef814-13e2-4897-bb19-44c60158ccfa.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/a755965e-9fc3-436a-8eca-680276461f9a_thumb.webp",
+      "path": "buildings/fullsize/a755965e-9fc3-436a-8eca-680276461f9a.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/ae30cb9a-21aa-4c2f-8242-799b04c8e3e7_thumb.webp",
+      "path": "buildings/fullsize/ae30cb9a-21aa-4c2f-8242-799b04c8e3e7.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/bb7bcb91-9114-42a8-8bd5-5a53080640d1_thumb.webp",
+      "path": "buildings/fullsize/bb7bcb91-9114-42a8-8bd5-5a53080640d1.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "buildings",
+      "previewPath": "buildings/thumbnails/d655666c-7fdf-425a-89d9-89fb45546a03_thumb.webp",
+      "path": "buildings/fullsize/d655666c-7fdf-425a-89d9-89fb45546a03.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "fantasy",
+      "previewPath": "fantasy/thumbnails/027f4685-2b9a-4b8f-a7c2-56126b19c89d_thumb.webp",
+      "path": "fantasy/fullsize/027f4685-2b9a-4b8f-a7c2-56126b19c89d.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "fantasy",
+      "previewPath": "fantasy/thumbnails/27272a15-e194-48d9-b326-5cc295fdbe54_thumb.webp",
+      "path": "fantasy/fullsize/27272a15-e194-48d9-b326-5cc295fdbe54.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "fantasy",
+      "previewPath": "fantasy/thumbnails/3713e1d8-4f6a-4886-b740-7b3a8120bb11_thumb.webp",
+      "path": "fantasy/fullsize/3713e1d8-4f6a-4886-b740-7b3a8120bb11.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "fantasy",
+      "previewPath": "fantasy/thumbnails/4cf70784-71e2-4cf9-b516-ea99efad7f77_thumb.webp",
+      "path": "fantasy/fullsize/4cf70784-71e2-4cf9-b516-ea99efad7f77.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "fantasy",
+      "previewPath": "fantasy/thumbnails/74524f5c-fb0a-4b08-843e-113142564152_thumb.webp",
+      "path": "fantasy/fullsize/74524f5c-fb0a-4b08-843e-113142564152.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "fantasy",
+      "previewPath": "fantasy/thumbnails/7e8e12d1-cdb4-41bf-8e51-2356ca0111f5_thumb.webp",
+      "path": "fantasy/fullsize/7e8e12d1-cdb4-41bf-8e51-2356ca0111f5.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "fantasy",
+      "previewPath": "fantasy/thumbnails/97d9d716-8962-4170-b4ae-0d6ff39d0001_thumb.webp",
+      "path": "fantasy/fullsize/97d9d716-8962-4170-b4ae-0d6ff39d0001.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "fantasy",
+      "previewPath": "fantasy/thumbnails/a599a0b6-b8fe-4264-b80f-27fec6446422_thumb.webp",
+      "path": "fantasy/fullsize/a599a0b6-b8fe-4264-b80f-27fec6446422.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/030b92d6-5b6f-438e-8b56-f2d4976f035b_thumb.webp",
+      "path": "flowers/fullsize/030b92d6-5b6f-438e-8b56-f2d4976f035b.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/0ae2ffd8-95ea-450f-8cea-2a5ada13e01b_thumb.webp",
+      "path": "flowers/fullsize/0ae2ffd8-95ea-450f-8cea-2a5ada13e01b.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/17f28227-688b-44f7-bc7e-5aa5b38b9e8b_thumb.webp",
+      "path": "flowers/fullsize/17f28227-688b-44f7-bc7e-5aa5b38b9e8b.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/19ec1750-9498-4a38-911d-b0ecd89bcf61_thumb.webp",
+      "path": "flowers/fullsize/19ec1750-9498-4a38-911d-b0ecd89bcf61.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/2bb832f2-6d0d-43fb-bba0-47cc9ad64e37_thumb.webp",
+      "path": "flowers/fullsize/2bb832f2-6d0d-43fb-bba0-47cc9ad64e37.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/3ed1a1d4-cb9a-4f6d-82af-36b51ec7fa9f_thumb.webp",
+      "path": "flowers/fullsize/3ed1a1d4-cb9a-4f6d-82af-36b51ec7fa9f.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/498c249b-c254-4fcd-bac1-8916d9158938_thumb.webp",
+      "path": "flowers/fullsize/498c249b-c254-4fcd-bac1-8916d9158938.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/52744f8c-3300-4072-80e3-d0abd38fdeb2_thumb.webp",
+      "path": "flowers/fullsize/52744f8c-3300-4072-80e3-d0abd38fdeb2.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/52b9a5d6-5c84-403b-80df-607aa711117d_thumb.webp",
+      "path": "flowers/fullsize/52b9a5d6-5c84-403b-80df-607aa711117d.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/655daa7e-b8de-4213-868b-059baf2b5358_thumb.webp",
+      "path": "flowers/fullsize/655daa7e-b8de-4213-868b-059baf2b5358.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/6aff7445-87ef-4363-ac9e-94db93b1921a_thumb.webp",
+      "path": "flowers/fullsize/6aff7445-87ef-4363-ac9e-94db93b1921a.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/7ca6a03d-be79-4239-8ca7-4d4e6e165974_thumb.webp",
+      "path": "flowers/fullsize/7ca6a03d-be79-4239-8ca7-4d4e6e165974.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/819220fb-bb18-46bd-acfb-399975c0b796_thumb.webp",
+      "path": "flowers/fullsize/819220fb-bb18-46bd-acfb-399975c0b796.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/835acc56-5c06-4023-ab60-df70c7373d2c_thumb.webp",
+      "path": "flowers/fullsize/835acc56-5c06-4023-ab60-df70c7373d2c.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/8735bf77-c389-4587-89f3-bca5269d50bd_thumb.webp",
+      "path": "flowers/fullsize/8735bf77-c389-4587-89f3-bca5269d50bd.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/91a2ed78-e66d-40bd-9229-7a10dfca31b1_thumb.webp",
+      "path": "flowers/fullsize/91a2ed78-e66d-40bd-9229-7a10dfca31b1.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/99f430ca-19f0-4a3b-ae8f-99f4a6d59d50_thumb.webp",
+      "path": "flowers/fullsize/99f430ca-19f0-4a3b-ae8f-99f4a6d59d50.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/9dc3a395-4e8c-482d-ad72-ae2c7a7d91b1_thumb.webp",
+      "path": "flowers/fullsize/9dc3a395-4e8c-482d-ad72-ae2c7a7d91b1.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/9dfc365e-b931-48c9-9d44-5ee68a60a3dc_thumb.webp",
+      "path": "flowers/fullsize/9dfc365e-b931-48c9-9d44-5ee68a60a3dc.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/a0095112-4a5e-4f87-8182-564a790bb0c7_thumb.webp",
+      "path": "flowers/fullsize/a0095112-4a5e-4f87-8182-564a790bb0c7.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/a7b7d1d1-6b6b-449f-a1eb-061c519bf601_thumb.webp",
+      "path": "flowers/fullsize/a7b7d1d1-6b6b-449f-a1eb-061c519bf601.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/acae3ca2-73f7-418e-a0de-e74c84aac760_thumb.webp",
+      "path": "flowers/fullsize/acae3ca2-73f7-418e-a0de-e74c84aac760.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/b93e72c0-378b-46a3-a3df-2effccea4749_thumb.webp",
+      "path": "flowers/fullsize/b93e72c0-378b-46a3-a3df-2effccea4749.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/c09044a8-0610-4f99-8227-cfdd234bca15_thumb.webp",
+      "path": "flowers/fullsize/c09044a8-0610-4f99-8227-cfdd234bca15.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/d478bc95-1d83-41e2-956a-d8cdb2cbb580_thumb.webp",
+      "path": "flowers/fullsize/d478bc95-1d83-41e2-956a-d8cdb2cbb580.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/d6f5bfb8-e350-4fea-a611-292b3905759e_thumb.webp",
+      "path": "flowers/fullsize/d6f5bfb8-e350-4fea-a611-292b3905759e.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/d976ab66-a82c-4308-8d34-345f9f72c123_thumb.webp",
+      "path": "flowers/fullsize/d976ab66-a82c-4308-8d34-345f9f72c123.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/e57d1843-5e4c-46be-b916-b0930e7eb97a_thumb.webp",
+      "path": "flowers/fullsize/e57d1843-5e4c-46be-b916-b0930e7eb97a.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/e8596e90-e6ce-4c3b-9b49-f9cf43d8d78c_thumb.webp",
+      "path": "flowers/fullsize/e8596e90-e6ce-4c3b-9b49-f9cf43d8d78c.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/e9ef392f-1c6c-4563-99d8-9b286482691d_thumb.webp",
+      "path": "flowers/fullsize/e9ef392f-1c6c-4563-99d8-9b286482691d.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/ed321469-0755-440c-9ed1-54ef58f61e43_thumb.webp",
+      "path": "flowers/fullsize/ed321469-0755-440c-9ed1-54ef58f61e43.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/ee05c5a2-0df2-4c10-8c32-51f65ff00cb2_thumb.webp",
+      "path": "flowers/fullsize/ee05c5a2-0df2-4c10-8c32-51f65ff00cb2.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/ee6a3f80-dd50-4bc5-8005-cda1b0f534e2_thumb.webp",
+      "path": "flowers/fullsize/ee6a3f80-dd50-4bc5-8005-cda1b0f534e2.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/f268d346-04ce-4191-8f9f-513086c7fdf1_thumb.webp",
+      "path": "flowers/fullsize/f268d346-04ce-4191-8f9f-513086c7fdf1.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "flowers",
+      "previewPath": "flowers/thumbnails/f6c0e541-a52e-4ae1-b57b-1b01649ea023_thumb.webp",
+      "path": "flowers/fullsize/f6c0e541-a52e-4ae1-b57b-1b01649ea023.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
       "categoryId": "nature",
-      "categoryName": "Nature"
+      "previewPath": "nature/thumbnails/01a51a34-5372-4183-92a4-b8552804883d_thumb.webp",
+      "path": "nature/fullsize/01a51a34-5372-4183-92a4-b8552804883d.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
     },
     {
-      "id": "p2",
-      "fileName": "p2.webp",
-      "title": "Candy Sky",
-      "subtitle": "Warm dusk glow",
-      "description": "Pink-orange clouds with a bright horizon.",
-      "categoryId": "sunsets",
-      "categoryName": "Sunsets"
-    },
-    {
-      "id": "p3",
-      "fileName": "p3.webp",
-      "title": "Neon Canal",
-      "subtitle": "City reflections",
-      "description": "Colorful lights mirrored on quiet water.",
-      "categoryId": "city",
-      "categoryName": "City"
-    },
-    {
-      "id": "p4",
-      "fileName": "p4.webp",
-      "title": "Forest Crest",
-      "subtitle": "Highland greens",
-      "description": "Rolling peaks with deep green slopes.",
       "categoryId": "nature",
-      "categoryName": "Nature"
+      "previewPath": "nature/thumbnails/1757580d-5fa5-48d9-98a8-d0b7ef6c499b_thumb.webp",
+      "path": "nature/fullsize/1757580d-5fa5-48d9-98a8-d0b7ef6c499b.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/22c38293-879f-4fb2-a6ba-2bbe17397629_thumb.webp",
+      "path": "nature/fullsize/22c38293-879f-4fb2-a6ba-2bbe17397629.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/43c75892-7ed9-4bb6-848b-f375f7015f1c_thumb.webp",
+      "path": "nature/fullsize/43c75892-7ed9-4bb6-848b-f375f7015f1c.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/4dcbd92a-5363-48d4-af9a-92122b2256a7_thumb.webp",
+      "path": "nature/fullsize/4dcbd92a-5363-48d4-af9a-92122b2256a7.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/62408bf3-bd5a-4c41-a391-3fee24c2d050_thumb.webp",
+      "path": "nature/fullsize/62408bf3-bd5a-4c41-a391-3fee24c2d050.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/6445d0be-7483-4eb8-a254-c02e69782475_thumb.webp",
+      "path": "nature/fullsize/6445d0be-7483-4eb8-a254-c02e69782475.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/74bbe444-e3ea-456b-87b1-2373e7d1003a_thumb.webp",
+      "path": "nature/fullsize/74bbe444-e3ea-456b-87b1-2373e7d1003a.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/751cb1c7-600b-49be-b6c4-63b91d9147b2_thumb.webp",
+      "path": "nature/fullsize/751cb1c7-600b-49be-b6c4-63b91d9147b2.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/958f6b4e-c57b-4ef8-883d-6adac8af41b3_thumb.webp",
+      "path": "nature/fullsize/958f6b4e-c57b-4ef8-883d-6adac8af41b3.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/9bdbeed0-03bf-4ca9-aa62-53fe22bf43ea_thumb.webp",
+      "path": "nature/fullsize/9bdbeed0-03bf-4ca9-aa62-53fe22bf43ea.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/9f00db04-f03d-471c-aa35-f3ce0da43b8a_thumb.webp",
+      "path": "nature/fullsize/9f00db04-f03d-471c-aa35-f3ce0da43b8a.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/b03f614d-e47b-4981-b7bc-eec27f37e287_thumb.webp",
+      "path": "nature/fullsize/b03f614d-e47b-4981-b7bc-eec27f37e287.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/b6ecc271-9ed3-4c32-9499-1ee1c5c08a74_thumb.webp",
+      "path": "nature/fullsize/b6ecc271-9ed3-4c32-9499-1ee1c5c08a74.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/c1e9e7e7-b282-4320-9e36-53a0c10a176b_thumb.webp",
+      "path": "nature/fullsize/c1e9e7e7-b282-4320-9e36-53a0c10a176b.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/ccde2a7a-9a76-422f-95e6-6284cfd6d623_thumb.webp",
+      "path": "nature/fullsize/ccde2a7a-9a76-422f-95e6-6284cfd6d623.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/d46a476e-7a96-41d6-8e43-a1f9931cc70d_thumb.webp",
+      "path": "nature/fullsize/d46a476e-7a96-41d6-8e43-a1f9931cc70d.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "nature",
+      "previewPath": "nature/thumbnails/fbecdf11-9fbf-490d-81a2-b7710bbceab6_thumb.webp",
+      "path": "nature/fullsize/fbecdf11-9fbf-490d-81a2-b7710bbceab6.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/02893539-8f89-4f1d-87cd-65ec36857282_thumb.webp",
+      "path": "still_life/fullsize/02893539-8f89-4f1d-87cd-65ec36857282.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/0503d093-a8b0-43a9-ad12-7437fcf0b069_thumb.webp",
+      "path": "still_life/fullsize/0503d093-a8b0-43a9-ad12-7437fcf0b069.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/0f1c4029-2966-4e6f-b09b-7b2329fc6d91_thumb.webp",
+      "path": "still_life/fullsize/0f1c4029-2966-4e6f-b09b-7b2329fc6d91.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/1348ecbd-d402-4433-a724-823534ce171a_thumb.webp",
+      "path": "still_life/fullsize/1348ecbd-d402-4433-a724-823534ce171a.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/177cc787-a8ef-4dbb-bc27-eefaa9b39083_thumb.webp",
+      "path": "still_life/fullsize/177cc787-a8ef-4dbb-bc27-eefaa9b39083.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/2161d094-0b80-4415-8d83-785ab33eba17_thumb.webp",
+      "path": "still_life/fullsize/2161d094-0b80-4415-8d83-785ab33eba17.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/222f1ae9-823a-48e4-a28d-d85fcee8a8f9_thumb.webp",
+      "path": "still_life/fullsize/222f1ae9-823a-48e4-a28d-d85fcee8a8f9.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/25a83f33-eb01-4b80-bec0-68e55e6a2abf_thumb.webp",
+      "path": "still_life/fullsize/25a83f33-eb01-4b80-bec0-68e55e6a2abf.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/27fcc494-b855-448d-86d2-156804b1af50_thumb.webp",
+      "path": "still_life/fullsize/27fcc494-b855-448d-86d2-156804b1af50.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/34838810-d9d1-4e96-a18d-581b92af1adb_thumb.webp",
+      "path": "still_life/fullsize/34838810-d9d1-4e96-a18d-581b92af1adb.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/49c70fbf-99a0-4213-bdfd-822fbb6f3740_thumb.webp",
+      "path": "still_life/fullsize/49c70fbf-99a0-4213-bdfd-822fbb6f3740.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/586629e2-7ea6-40cb-9bdf-017c0139e969_thumb.webp",
+      "path": "still_life/fullsize/586629e2-7ea6-40cb-9bdf-017c0139e969.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/59ea01dd-189d-42d4-9a63-3105a757e809_thumb.webp",
+      "path": "still_life/fullsize/59ea01dd-189d-42d4-9a63-3105a757e809.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/6555423c-bc4b-4d1f-9c02-fa1ac07bc4fc_thumb.webp",
+      "path": "still_life/fullsize/6555423c-bc4b-4d1f-9c02-fa1ac07bc4fc.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/6d46a2b3-a67d-41b7-a621-ff2fa80ba16f_thumb.webp",
+      "path": "still_life/fullsize/6d46a2b3-a67d-41b7-a621-ff2fa80ba16f.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/72a96f48-771a-4199-8839-b550efe84a89_thumb.webp",
+      "path": "still_life/fullsize/72a96f48-771a-4199-8839-b550efe84a89.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/a4af43df-f472-4187-ae30-eca78245e78a_thumb.webp",
+      "path": "still_life/fullsize/a4af43df-f472-4187-ae30-eca78245e78a.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/b31ea12e-2b7a-49d6-a4c0-ebeb4e2a8647_thumb.webp",
+      "path": "still_life/fullsize/b31ea12e-2b7a-49d6-a4c0-ebeb4e2a8647.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/ccec0bde-6a50-4175-8f39-b2dfd4f5801d_thumb.webp",
+      "path": "still_life/fullsize/ccec0bde-6a50-4175-8f39-b2dfd4f5801d.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
+    },
+    {
+      "categoryId": "still_life",
+      "previewPath": "still_life/thumbnails/d809339e-62a4-4fd1-a8c4-3243164c622b_thumb.webp",
+      "path": "still_life/fullsize/d809339e-62a4-4fd1-a8c4-3243164c622b.webp",
+      "updatedAt": "2026-03-30T14:55:10.533Z",
+      "updatedAtDate": "2026-03-30"
     }
   ]
 }

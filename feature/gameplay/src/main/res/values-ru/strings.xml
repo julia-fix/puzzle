@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="gameplay_title_in_progress">Соберите пазл</string>
-    <string name="gameplay_title_completed">Пазл собран</string>
+    <string name="gameplay_title_in_progress">Соберите паззл</string>
+    <string name="gameplay_title_completed">Паззл собран</string>
     <string name="gameplay_progress_summary">%1$s • %2$d%% собрано</string>
+    <string name="gameplay_progress_percent">%1$d%% собрано</string>
     <string name="gameplay_reset">Сброс</string>
+    <string name="gameplay_background_picker">Выбрать фон</string>
+    <string name="gameplay_background_picker_title">Фон</string>
+    <string name="gameplay_background_sample">Вариант фона %1$d</string>
     <string name="gameplay_loose_pieces_title">Детали</string>
-    <string name="gameplay_reset_dialog_title">Сбросить пазл?</string>
-    <string name="gameplay_reset_dialog_message">Текущий прогресс для этого размера пазла будет удалён.</string>
+    <string name="gameplay_reset_dialog_title">Сбросить паззл?</string>
+    <string name="gameplay_reset_dialog_message">Текущий прогресс для этого размера паззла будет удалён.</string>
     <string name="gameplay_reset_confirm">Сбросить</string>
     <string name="gameplay_cancel">Отмена</string>
 

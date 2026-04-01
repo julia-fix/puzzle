@@ -28,6 +28,34 @@ private val Context.progressDataStore: DataStore<Preferences> by preferencesData
 class DataStoreJigsawProgressStore(
     private val dataStore: DataStore<Preferences>,
 ) : JigsawProgressStore {
+    suspend fun migrateLegacyImageIds(idMappings: Map<String, String>) {
+        if (idMappings.isEmpty()) {
+            return
+        }
+
+        dataStore.edit { preferences ->
+            val storedRecords = preferences.asStoredProgressRecords()
+            if (storedRecords.none { record -> idMappings[record.imageId]?.let { it != record.imageId } == true }) {
+                return@edit
+            }
+
+            val migratedRecords = migrateStoredProgressRecords(
+                records = storedRecords,
+                idMappings = idMappings,
+            )
+
+            val recordsToRemove = storedRecords + migratedRecords
+            recordsToRemove.forEach { record ->
+                preferences.remove(progressKey(record.imageId, record.pieceCount))
+                preferences.remove(updatedKey(record.imageId, record.pieceCount))
+            }
+            migratedRecords.forEach { record ->
+                preferences[progressKey(record.imageId, record.pieceCount)] = record.payload
+                preferences[updatedKey(record.imageId, record.pieceCount)] = record.updatedAtEpochMillis
+            }
+        }
+    }
+
     override suspend fun loadProgress(imageId: String, pieceCount: Int): JigsawProgress? {
         val preferences = safePreferences().first()
         val progressPayload = decodeProgressPayload(preferences[progressKey(imageId, pieceCount)])
@@ -118,9 +146,21 @@ internal data class ProgressPayload(
     val pieceOrder: List<Int>,
 )
 
+internal data class StoredProgressRecord(
+    val imageId: String,
+    val pieceCount: Int,
+    val payload: String,
+    val updatedAtEpochMillis: Long,
+)
+
 internal fun encodeProgressPayloadForTest(progress: JigsawProgress): String = encodeProgressPayload(progress)
 
 internal fun decodeProgressPayloadForTest(rawValue: String?): ProgressPayload = decodeProgressPayload(rawValue)
+
+internal fun migrateStoredProgressRecordsForTest(
+    records: List<StoredProgressRecord>,
+    idMappings: Map<String, String>,
+): List<StoredProgressRecord> = migrateStoredProgressRecords(records, idMappings)
 
 private fun encodeProgressPayload(progress: JigsawProgress): String = buildString {
     append(PROGRESS_FORMAT_VERSION)
@@ -225,3 +265,47 @@ internal fun decodePieceOrder(rawValue: String?): List<Int> = rawValue
 
 private const val PREVIOUS_PROGRESS_FORMAT_VERSION = "v2"
 private const val PROGRESS_FORMAT_VERSION = "v3"
+
+private fun Preferences.asStoredProgressRecords(): List<StoredProgressRecord> = asMap()
+    .entries
+    .mapNotNull { (rawKey, value) ->
+        val keyName = rawKey.name
+        if (!keyName.startsWith(PROGRESS_PREFIX) || value !is String) {
+            return@mapNotNull null
+        }
+
+        val sessionDescriptor = keyName.removePrefix(PROGRESS_PREFIX)
+        val separatorIndex = sessionDescriptor.lastIndexOf(':')
+        if (separatorIndex == -1) {
+            return@mapNotNull null
+        }
+
+        val imageId = sessionDescriptor.substring(0, separatorIndex)
+        val pieceCount = sessionDescriptor.substring(separatorIndex + 1).toIntOrNull()
+            ?: return@mapNotNull null
+        val updatedAt = this[updatedKey(imageId, pieceCount)] ?: return@mapNotNull null
+
+        StoredProgressRecord(
+            imageId = imageId,
+            pieceCount = pieceCount,
+            payload = value,
+            updatedAtEpochMillis = updatedAt,
+        )
+    }
+
+private fun migrateStoredProgressRecords(
+    records: List<StoredProgressRecord>,
+    idMappings: Map<String, String>,
+): List<StoredProgressRecord> = records
+    .map { record ->
+        record.copy(imageId = idMappings[record.imageId] ?: record.imageId)
+    }
+    .groupBy { record -> record.imageId to record.pieceCount }
+    .values
+    .mapNotNull { group ->
+        group.maxByOrNull(StoredProgressRecord::updatedAtEpochMillis)
+    }
+    .sortedWith(
+        compareBy<StoredProgressRecord>(StoredProgressRecord::imageId)
+            .thenBy(StoredProgressRecord::pieceCount),
+    )

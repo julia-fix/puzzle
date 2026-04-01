@@ -10,7 +10,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -20,7 +21,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import com.puzzle.jigsaw.core.designsystem.components.PuzzleImageAspectRatio
 import com.puzzle.jigsaw.core.model.PieceCountOption
 import com.puzzle.jigsaw.domain.jigsaw.JigsawEdge
 import com.puzzle.jigsaw.domain.jigsaw.JigsawEdgeKind
@@ -34,12 +34,16 @@ internal fun JigsawBoard(
     pieceCount: PieceCountOption,
     pieces: List<JigsawPieceLayout>,
     placedPieceIds: Set<Int>,
-    highlightedPieceIds: Set<Int>,
-    finishedImageProgress: Float,
     assetBitmap: ImageBitmap?,
+    boardBackgroundColor: Color? = null,
+    emptyFillColor: Color? = null,
+    boardOutlineColor: Color? = null,
     modifier: Modifier = Modifier,
 ) {
     val palette = rememberJigsawPalette()
+    val resolvedBoardBackground = boardBackgroundColor ?: palette.boardBackground
+    val resolvedEmptyFill = emptyFillColor ?: palette.emptyFill
+    val resolvedBoardOutline = boardOutlineColor ?: palette.boardOutline
 
     Box(
         modifier = modifier
@@ -62,19 +66,16 @@ internal fun JigsawBoard(
                 )
 
                 onDrawBehind {
-                    drawRect(color = palette.boardBackground)
+                    drawRect(color = resolvedBoardBackground)
                     pieces.forEach { piece ->
                         val path = boardPaths.piecePaths.getValue(piece.pieceId)
                         val isPlaced = piece.pieceId in placedPieceIds
-                        val pieceHighlightProgress = if (piece.pieceId in highlightedPieceIds) 1f else 0f
                         if (isPlaced) {
-                            if (finishedImageProgress < 1f) {
-                                drawPieceShadow(
-                                    path = path,
-                                    color = palette.pieceShadow.copy(alpha = palette.pieceShadow.alpha * (1f - finishedImageProgress)),
-                                    offset = reliefOffset,
-                                )
-                            }
+                            drawPieceShadow(
+                                path = path,
+                                color = palette.pieceShadow,
+                                offset = reliefOffset,
+                            )
                             if (assetBitmap != null) {
                                 clipPath(path) {
                                     drawImage(
@@ -89,45 +90,23 @@ internal fun JigsawBoard(
                                     style = Fill,
                                 )
                             }
-                            if (finishedImageProgress < 1f) {
-                                drawPieceRelief(
-                                    path = path,
-                                    strokeWidth = strokeWidth,
-                                    highlight = palette.pieceHighlight.copy(alpha = palette.pieceHighlight.alpha * (1f - finishedImageProgress)),
-                                    shade = palette.pieceShade.copy(alpha = palette.pieceShade.alpha * (1f - finishedImageProgress)),
-                                    offset = reliefOffset,
-                                )
-                            }
-                            if (pieceHighlightProgress > 0f) {
-                                drawPath(
-                                    path = path,
-                                    color = palette.snapHighlight.copy(alpha = 0.16f * pieceHighlightProgress),
-                                    style = Fill,
-                                )
-                                drawPath(
-                                    path = path,
-                                    color = palette.snapHighlight.copy(alpha = 0.5f * pieceHighlightProgress),
-                                    style = Stroke(width = strokeWidth * 0.42f),
-                                )
-                            }
+                            drawPieceRelief(
+                                path = path,
+                                strokeWidth = strokeWidth,
+                                shade = palette.pieceShade,
+                                offset = reliefOffset,
+                            )
                         } else {
                             drawPath(
                                 path = path,
-                                color = palette.emptyFill,
+                                color = resolvedEmptyFill,
                                 style = Fill,
                             )
                         }
                     }
-                    if (assetBitmap != null && finishedImageProgress > 0f) {
-                        drawImage(
-                            image = assetBitmap,
-                            dstSize = dstSize,
-                            alpha = finishedImageProgress,
-                        )
-                    }
                     drawPath(
                         path = boardPaths.outlinePath,
-                        color = palette.boardOutline,
+                        color = resolvedBoardOutline,
                         style = Stroke(width = strokeWidth),
                     )
                 }
@@ -142,7 +121,9 @@ internal fun JigsawLoosePiecePreview(
     assetBitmap: ImageBitmap?,
     boardCellWidth: Dp,
     boardCellHeight: Dp,
-    highlightProgress: Float = 0f,
+    debugHitboxStrokeColor: Color? = null,
+    debugHitboxStrokeWidthPx: Float = 0f,
+    debugHitboxPaddingPx: Float = 0f,
     modifier: Modifier = Modifier,
 ) {
     val palette = rememberJigsawPalette()
@@ -202,20 +183,27 @@ internal fun JigsawLoosePiecePreview(
                 drawPieceRelief(
                     path = path,
                     strokeWidth = strokeWidth,
-                    highlight = palette.pieceHighlight,
                     shade = palette.pieceShade,
                     offset = reliefOffset,
                 )
-                if (highlightProgress > 0f) {
-                    drawPath(
-                        path = path,
-                        color = palette.snapHighlight.copy(alpha = 0.18f * highlightProgress),
-                        style = Fill,
+                if (debugHitboxStrokeColor != null && debugHitboxStrokeWidthPx > 0f) {
+                    drawRect(
+                        color = debugHitboxStrokeColor.copy(alpha = 0.55f),
+                        topLeft = Offset(-debugHitboxPaddingPx, -debugHitboxPaddingPx),
+                        size = Size(
+                            width = size.width + (debugHitboxPaddingPx * 2f),
+                            height = size.height + (debugHitboxPaddingPx * 2f),
+                        ),
+                        style = Stroke(width = debugHitboxStrokeWidthPx),
                     )
-                    drawPath(
-                        path = path,
-                        color = palette.snapHighlight.copy(alpha = 0.55f * highlightProgress),
-                        style = Stroke(width = strokeWidth * 0.42f),
+                    drawRect(
+                        color = debugHitboxStrokeColor,
+                        topLeft = Offset(-debugHitboxPaddingPx, -debugHitboxPaddingPx),
+                        size = Size(
+                            width = size.width + (debugHitboxPaddingPx * 2f),
+                            height = size.height + (debugHitboxPaddingPx * 2f),
+                        ),
+                        style = Stroke(width = 1.25f),
                     )
                 }
             }
@@ -242,10 +230,8 @@ private fun rememberJigsawPalette(): JigsawPalette = JigsawPalette(
     emptyFill = MaterialTheme.colorScheme.surface.copy(alpha = 0.56f),
     boardOutline = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f),
     placedFallbackFill = MaterialTheme.colorScheme.primaryContainer,
-    pieceHighlight = Color.White.copy(alpha = 0.34f),
     pieceShade = Color.Black.copy(alpha = 0.18f),
     pieceShadow = Color.Black.copy(alpha = 0.11f),
-    snapHighlight = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.92f),
 )
 
 private data class JigsawPalette(
@@ -253,10 +239,8 @@ private data class JigsawPalette(
     val emptyFill: Color,
     val boardOutline: Color,
     val placedFallbackFill: Color,
-    val pieceHighlight: Color,
     val pieceShade: Color,
     val pieceShadow: Color,
-    val snapHighlight: Color,
 )
 
 internal data class LoosePieceBounds(
@@ -366,20 +350,10 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPieceShadow(
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPieceRelief(
     path: Path,
     strokeWidth: Float,
-    highlight: Color,
     shade: Color,
     offset: Float,
 ) {
     val bounds = path.getBounds()
-    val highlightBrush = Brush.linearGradient(
-        colors = listOf(
-            highlight.copy(alpha = highlight.alpha * 0.95f),
-            highlight.copy(alpha = highlight.alpha * 0.45f),
-            highlight.copy(alpha = 0f),
-        ),
-        start = bounds.topLeft,
-        end = bounds.bottomRight,
-    )
     val shadeBrush = Brush.linearGradient(
         colors = listOf(
             shade.copy(alpha = 0f),
@@ -400,20 +374,6 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPieceRelief(
             path = path,
             brush = shadeBrush,
             style = Stroke(width = strokeWidth * 0.36f),
-        )
-    }
-    translate(left = -offset * 0.95f, top = -offset * 0.95f) {
-        drawPath(
-            path = path,
-            brush = highlightBrush,
-            style = Stroke(width = strokeWidth * 0.34f),
-        )
-    }
-    translate(left = -offset * 0.35f, top = -offset * 0.2f) {
-        drawPath(
-            path = path,
-            brush = highlightBrush,
-            style = Stroke(width = strokeWidth * 0.18f),
         )
     }
 }

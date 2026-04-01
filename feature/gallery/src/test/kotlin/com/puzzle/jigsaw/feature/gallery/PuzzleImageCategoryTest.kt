@@ -1,6 +1,7 @@
 package com.puzzle.jigsaw.feature.gallery
 
 import com.puzzle.jigsaw.core.model.PuzzleImage
+import com.puzzle.jigsaw.core.model.PuzzleImageStorage
 import com.puzzle.jigsaw.core.model.RecentPuzzleSession
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -61,9 +62,9 @@ class PuzzleImageCategoryTest {
     ): PuzzleImage = PuzzleImage(
         id = id,
         title = id,
-        subtitle = "",
-        description = "",
-        assetPath = "puzzles/$id.webp",
+        previewPath = "puzzles/$id-preview.webp",
+        fullImagePath = "puzzles/$id.webp",
+        storage = PuzzleImageStorage.ASSET,
         categoryId = categoryId,
         categoryName = categoryName,
     )

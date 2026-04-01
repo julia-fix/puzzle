@@ -1,0 +1,40 @@
+{
+  "images": [
+    {
+      "id": "p1",
+      "fileName": "p1.webp",
+      "title": "Emerald Valley",
+      "subtitle": "Misty ridges",
+      "description": "Layered green hills with morning light.",
+      "categoryId": "nature",
+      "categoryName": "Nature"
+    },
+    {
+      "id": "p2",
+      "fileName": "p2.webp",
+      "title": "Candy Sky",
+      "subtitle": "Warm dusk glow",
+      "description": "Pink-orange clouds with a bright horizon.",
+      "categoryId": "sunsets",
+      "categoryName": "Sunsets"
+    },
+    {
+      "id": "p3",
+      "fileName": "p3.webp",
+      "title": "Neon Canal",
+      "subtitle": "City reflections",
+      "description": "Colorful lights mirrored on quiet water.",
+      "categoryId": "city",
+      "categoryName": "City"
+    },
+    {
+      "id": "p4",
+      "fileName": "p4.webp",
+      "title": "Forest Crest",
+      "subtitle": "Highland greens",
+      "description": "Rolling peaks with deep green slopes.",
+      "categoryId": "nature",
+      "categoryName": "Nature"
+    }
+  ]
+}

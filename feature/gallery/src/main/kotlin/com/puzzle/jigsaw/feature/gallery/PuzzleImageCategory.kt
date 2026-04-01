@@ -36,6 +36,7 @@ fun orderCategoryImages(
         compareBy<PuzzleImageProgress> { progressBucket(it.completionRatio) }
             .thenByDescending { if (it.completionRatio in 0f..0.99999994f) it.completionRatio else -1f }
             .thenByDescending(PuzzleImageProgress::updatedAtEpochMillis)
+            .thenBy { it.image.sortOrder }
             .thenBy { it.image.title },
     )
 }

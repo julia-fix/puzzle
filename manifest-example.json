@@ -1,9 +1,10 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "revision": "2026-03-23T20:45:00Z",
   "categories": [
     {
       "id": "nature",
+      "sortOrder": 10,
       "names": {
         "en": "Nature",
         "ru": "Природа"
@@ -21,11 +22,13 @@
   "images": [
     {
       "categoryId": "nature",
+      "previewPath": "nature/previews/forest-morning.webp",
       "path": "nature/forest-morning.webp",
       "updatedAt": "2026-03-18T14:10:00Z"
     },
     {
       "categoryId": "city",
+      "previewPath": "city/previews/neon-street.webp",
       "path": "city/neon-street.webp",
       "updatedAt": "2026-03-20T11:40:00Z"
     }

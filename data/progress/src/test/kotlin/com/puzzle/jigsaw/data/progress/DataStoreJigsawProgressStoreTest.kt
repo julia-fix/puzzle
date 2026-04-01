@@ -64,4 +64,53 @@ class DataStoreJigsawProgressStoreTest {
             decoded,
         )
     }
+
+    @Test
+    fun `migrateStoredProgressRecordsForTest rewrites legacy ids to paths`() {
+        val migrated = migrateStoredProgressRecordsForTest(
+            records = listOf(
+                StoredProgressRecord(
+                    imageId = "cat",
+                    pieceCount = 24,
+                    payload = "v3|1,2||",
+                    updatedAtEpochMillis = 10L,
+                ),
+            ),
+            idMappings = mapOf(
+                "cat" to "animals/fullsize/cat.webp",
+            ),
+        )
+
+        assertEquals(
+            listOf("animals/fullsize/cat.webp"),
+            migrated.map(StoredProgressRecord::imageId),
+        )
+    }
+
+    @Test
+    fun `migrateStoredProgressRecordsForTest keeps newest record when legacy and new ids collide`() {
+        val migrated = migrateStoredProgressRecordsForTest(
+            records = listOf(
+                StoredProgressRecord(
+                    imageId = "cat",
+                    pieceCount = 24,
+                    payload = "old",
+                    updatedAtEpochMillis = 10L,
+                ),
+                StoredProgressRecord(
+                    imageId = "animals/fullsize/cat.webp",
+                    pieceCount = 24,
+                    payload = "new",
+                    updatedAtEpochMillis = 20L,
+                ),
+            ),
+            idMappings = mapOf(
+                "cat" to "animals/fullsize/cat.webp",
+            ),
+        )
+
+        assertEquals(1, migrated.size)
+        assertEquals("animals/fullsize/cat.webp", migrated.single().imageId)
+        assertEquals("new", migrated.single().payload)
+    }
 }

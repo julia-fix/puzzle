@@ -2,6 +2,7 @@ package com.puzzle.jigsaw.domain.jigsaw
 
 import com.puzzle.jigsaw.core.model.JigsawProgress
 import com.puzzle.jigsaw.core.model.PuzzleImage
+import com.puzzle.jigsaw.core.model.PuzzleImageStorage
 import com.puzzle.jigsaw.core.model.SavedBoardPiecePosition
 import com.puzzle.jigsaw.core.model.SavedPieceLink
 import org.junit.Assert.assertEquals
@@ -13,9 +14,9 @@ class JigsawSessionStateTest {
     private val image = PuzzleImage(
         id = "fixture-image",
         title = "Fixture",
-        subtitle = "Fixture subtitle",
-        description = "Fixture description",
-        assetPath = "puzzles/fixture.webp",
+        previewPath = "puzzles/fixture-preview.webp",
+        fullImagePath = "puzzles/fixture.webp",
+        storage = PuzzleImageStorage.ASSET,
     )
     private val option = JigsawCatalog.pieceCountOptions().first()
 

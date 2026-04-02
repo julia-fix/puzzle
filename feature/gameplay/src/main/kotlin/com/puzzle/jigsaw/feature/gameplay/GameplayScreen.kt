@@ -69,7 +69,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
@@ -286,7 +285,7 @@ fun GameplayScreen(
     val trayItemBounds = remember { mutableStateMapOf<Int, Rect>() }
     var trayRowBounds by remember { mutableStateOf<Rect?>(null) }
     var overlayOriginInRoot by remember { mutableStateOf(Offset.Zero) }
-    var gestureExclusionRect by remember { mutableStateOf<AndroidRect?>(null) }
+    var gameplayRootBounds by remember { mutableStateOf<Rect?>(null) }
     var activeTrayScrollSnapshot by remember { mutableStateOf<TrayScrollSnapshot?>(null) }
     var pendingTrayScrollRestore by remember { mutableStateOf<TrayScrollSnapshot?>(null) }
     var isResetConfirmationVisible by remember { mutableStateOf(false) }
@@ -339,17 +338,6 @@ fun GameplayScreen(
         pendingTrayScrollRestore = null
     }
 
-    DisposableEffect(view, gestureExclusionRect) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            view.systemGestureExclusionRects = gestureExclusionRect?.let(::listOf).orEmpty()
-        }
-        onDispose {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                view.systemGestureExclusionRects = emptyList()
-            }
-        }
-    }
-
     fun playPlacementFeedback(updatedState: JigsawSessionState) {
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         placementSoundPlayer.play(
@@ -374,9 +362,9 @@ fun GameplayScreen(
                 patternBitmap = backgroundPatternBitmap,
             )
             .onGloballyPositioned { coordinates ->
-                val bounds = coordinates.boundsInRoot().toAndroidRect()
-                if (gestureExclusionRect != bounds) {
-                    gestureExclusionRect = bounds
+                val bounds = coordinates.boundsInRoot()
+                if (gameplayRootBounds != bounds) {
+                    gameplayRootBounds = bounds
                 }
             },
     ) {
@@ -499,6 +487,8 @@ fun GameplayScreen(
                     val boardCellHeightPx = with(density) { boardCellHeight.toPx() }
                     val boardInnerPaddingPx = with(density) { BoardInnerPadding.toPx() }
                     val boardHorizontalInsetPx = with(density) { ScreenHorizontalPadding.toPx() }
+                    val boardCardWidthPx = with(density) { boardCardWidth.toPx() }
+                    val boardCardHeightPx = with(density) { boardCardHeight.toPx() }
                     val trayItemSpacingPx = with(density) { TrayItemSpacing.toPx() }
                     val boardContentRect = Rect(
                         left = boardHorizontalInsetPx + boardInnerPaddingPx,
@@ -506,6 +496,38 @@ fun GameplayScreen(
                         right = boardHorizontalInsetPx + boardInnerPaddingPx + with(density) { boardContentWidth.toPx() },
                         bottom = boardInnerPaddingPx + with(density) { boardContentHeight.toPx() },
                     )
+                val boardGestureExclusionBounds = Rect(
+                    left = boardHorizontalInsetPx,
+                    top = 0f,
+                    right = boardHorizontalInsetPx + boardCardWidthPx,
+                    bottom = boardCardHeightPx,
+                ).translatedBy(overlayOriginInRoot)
+                val trayGestureExclusionBounds = trayRowBounds?.translatedBy(overlayOriginInRoot)
+                val gestureExclusionRects = remember(
+                    isCompleted,
+                    dragState,
+                    gameplayRootBounds,
+                    boardGestureExclusionBounds,
+                    trayGestureExclusionBounds,
+                ) {
+                    activeSystemGestureExclusionBounds(
+                        isPuzzleCompleted = isCompleted,
+                        isPieceDragging = dragState != null,
+                        gameplayBounds = gameplayRootBounds,
+                        boardBounds = boardGestureExclusionBounds,
+                        trayBounds = trayGestureExclusionBounds,
+                    ).map(Rect::toAndroidRect)
+                }
+                DisposableEffect(view, gestureExclusionRects) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        view.systemGestureExclusionRects = gestureExclusionRects
+                    }
+                    onDispose {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            view.systemGestureExclusionRects = emptyList()
+                        }
+                    }
+                }
                 val trayLayout = remember(pieceLayout, trayReferenceCellWidth, trayReferenceCellHeight) {
                     createTrayLayout(
                         pieces = pieceLayout,
@@ -1776,6 +1798,35 @@ private fun Rect.translatedBy(offset: Offset): Rect = Rect(
     right = right + offset.x,
     bottom = bottom + offset.y,
 )
+
+internal fun activeSystemGestureExclusionBounds(
+    isPuzzleCompleted: Boolean,
+    isPieceDragging: Boolean,
+    gameplayBounds: Rect?,
+    boardBounds: Rect?,
+    trayBounds: Rect?,
+): List<Rect> {
+    if (isPuzzleCompleted) {
+        return emptyList()
+    }
+
+    if (isPieceDragging) {
+        return if (gameplayBounds != null && gameplayBounds.width > 0f && gameplayBounds.height > 0f) {
+            listOf(gameplayBounds)
+        } else {
+            emptyList()
+        }
+    }
+
+    return buildList {
+        if (boardBounds != null && boardBounds.width > 0f && boardBounds.height > 0f) {
+            add(boardBounds)
+        }
+        if (trayBounds != null && trayBounds.width > 0f && trayBounds.height > 0f) {
+            add(trayBounds)
+        }
+    }
+}
 
 private fun Rect.toAndroidRect(): AndroidRect = AndroidRect(
     left.roundToInt(),

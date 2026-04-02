@@ -41,6 +41,7 @@ import com.puzzle.jigsaw.feature.gallery.GalleryScreen
 import com.puzzle.jigsaw.feature.gallery.GalleryUploadCropState
 import com.puzzle.jigsaw.feature.gallery.R as GalleryR
 import com.puzzle.jigsaw.feature.piececount.PieceCountScreen
+import com.puzzle.jigsaw.feature.piececount.R as PieceCountR
 import kotlinx.coroutines.launch
 
 @Composable
@@ -58,11 +59,13 @@ fun JigsawNavGraph() {
     val recentSessions = progressStore.recentSessions().collectAsStateWithLifecycle(initialValue = emptyList())
     val uploadPrepareErrorMessage = stringResource(GalleryR.string.gallery_upload_prepare_error)
     val uploadImportErrorMessage = stringResource(GalleryR.string.gallery_upload_import_error)
+    val deleteUploadedPuzzleErrorMessage = stringResource(PieceCountR.string.piececount_delete_error)
 
     var images by remember { mutableStateOf(emptyList<PuzzleImage>()) }
     var pendingUploadImport by remember { mutableStateOf<PendingUploadImport?>(null) }
     var isUploadInProgress by remember { mutableStateOf(false) }
     var galleryMessage by remember { mutableStateOf<String?>(null) }
+    var pieceCountMessage by remember { mutableStateOf<String?>(null) }
     var pendingImportedImageId by remember { mutableStateOf<String?>(null) }
     val latestPendingUploadImport by rememberUpdatedState(pendingUploadImport)
 
@@ -73,22 +76,24 @@ fun JigsawNavGraph() {
         )
     }
 
-    suspend fun refreshImages(syncCatalog: Boolean = false): List<PuzzleImage> {
-        val loadedImages = if (syncCatalog) {
-            loadStartupCatalogImages(
-                syncCatalogIfNeeded = catalogRepository::syncIfNeeded,
-                loadCatalogImages = catalogRepository::loadImages,
-            )
-        } else {
-            catalogRepository.loadImages()
-        }
+    suspend fun applyLoadedImages(loadedImages: List<PuzzleImage>): List<PuzzleImage> {
         progressStore.migrateLegacyImageIds(legacyImageIdMappings(loadedImages))
         images = loadedImages
         return loadedImages
     }
 
+    suspend fun refreshImages(): List<PuzzleImage> = applyLoadedImages(
+        loadStartupCatalogImages(
+            loadCatalogImages = catalogRepository::loadImages,
+        ),
+    )
+
     LaunchedEffect(catalogRepository, progressStore) {
-        refreshImages(syncCatalog = true)
+        refreshImages()
+        syncStartupCatalogImages(
+            syncCatalogIfNeeded = catalogRepository::syncIfNeeded,
+            onCatalogSynced = ::applyLoadedImages,
+        )
     }
 
     LaunchedEffect(images, pendingImportedImageId) {
@@ -206,7 +211,7 @@ fun JigsawNavGraph() {
                     onDeleteUploadedPuzzle = if (image.isUserUploadedPuzzle()) {
                         {
                             scope.launch {
-                                deleteUploadedPuzzle(
+                                deleteUploadedPuzzleAndHandleFailure(
                                     imageId = image.id,
                                     pieceCounts = pieceCounts,
                                     deleteUserImage = catalogRepository::deleteUserImage,
@@ -218,11 +223,18 @@ fun JigsawNavGraph() {
                                             inclusive = false,
                                         )
                                     },
+                                    onDeleteFailed = {
+                                        pieceCountMessage = deleteUploadedPuzzleErrorMessage
+                                    },
                                 )
                             }
                         }
                     } else {
                         null
+                    },
+                    message = pieceCountMessage,
+                    onMessageShown = {
+                        pieceCountMessage = null
                     },
                     onPieceCountSelected = { option ->
                         navController.navigate(JigsawDestination.gameplay(image.id, option.totalPieces))
@@ -304,9 +316,17 @@ internal interface ReleasablePendingUploadImport {
 }
 
 internal suspend fun loadStartupCatalogImages(
-    syncCatalogIfNeeded: suspend () -> List<PuzzleImage>?,
     loadCatalogImages: suspend () -> List<PuzzleImage>,
-): List<PuzzleImage> = syncCatalogIfNeeded() ?: loadCatalogImages()
+): List<PuzzleImage> = loadCatalogImages()
+
+internal suspend fun syncStartupCatalogImages(
+    syncCatalogIfNeeded: suspend () -> List<PuzzleImage>?,
+    onCatalogSynced: suspend (List<PuzzleImage>) -> Unit,
+): Boolean {
+    val syncedImages = syncCatalogIfNeeded() ?: return false
+    onCatalogSynced(syncedImages)
+    return true
+}
 
 internal suspend fun deleteUploadedPuzzle(
     imageId: String,
@@ -327,6 +347,29 @@ internal suspend fun deleteUploadedPuzzle(
     onDeleted()
     refreshImages()
     return true
+}
+
+internal suspend fun deleteUploadedPuzzleAndHandleFailure(
+    imageId: String,
+    pieceCounts: List<com.puzzle.jigsaw.core.model.PieceCountOption>,
+    deleteUserImage: suspend (String) -> Boolean,
+    clearProgress: suspend (String, Int) -> Unit,
+    refreshImages: suspend () -> Unit,
+    onDeleted: () -> Unit,
+    onDeleteFailed: () -> Unit,
+): Boolean {
+    val deleted = deleteUploadedPuzzle(
+        imageId = imageId,
+        pieceCounts = pieceCounts,
+        deleteUserImage = deleteUserImage,
+        clearProgress = clearProgress,
+        refreshImages = refreshImages,
+        onDeleted = onDeleted,
+    )
+    if (!deleted) {
+        onDeleteFailed()
+    }
+    return deleted
 }
 
 private fun PuzzleImage.isUserUploadedPuzzle(): Boolean =

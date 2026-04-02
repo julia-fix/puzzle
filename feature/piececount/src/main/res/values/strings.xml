@@ -6,5 +6,6 @@
     <string name="piececount_delete_dialog_title">Delete uploaded puzzle?</string>
     <string name="piececount_delete_dialog_message">This uploaded puzzle and all saved progress for it will be removed.</string>
     <string name="piececount_delete_confirm">Delete</string>
+    <string name="piececount_delete_error">Couldn\'t delete this uploaded puzzle. Try again.</string>
     <string name="piececount_cancel">Cancel</string>
 </resources>

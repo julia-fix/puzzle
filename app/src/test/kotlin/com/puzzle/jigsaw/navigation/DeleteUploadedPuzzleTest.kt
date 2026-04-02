@@ -73,4 +73,44 @@ class DeleteUploadedPuzzleTest {
         assertEquals(0, refreshedImages)
         assertEquals(0, deletedCallbacks)
     }
+
+    @Test
+    fun `deleteUploadedPuzzleAndHandleFailure invokes the failure callback when deletion fails`() = runBlocking {
+        var deleteFailedCallbacks = 0
+
+        val deleted = deleteUploadedPuzzleAndHandleFailure(
+            imageId = "upload-1",
+            pieceCounts = listOf(PieceCountOption(rows = 4, columns = 6)),
+            deleteUserImage = { false },
+            clearProgress = { _, _ -> },
+            refreshImages = { },
+            onDeleted = { },
+            onDeleteFailed = {
+                deleteFailedCallbacks += 1
+            },
+        )
+
+        assertFalse(deleted)
+        assertEquals(1, deleteFailedCallbacks)
+    }
+
+    @Test
+    fun `deleteUploadedPuzzleAndHandleFailure skips the failure callback after success`() = runBlocking {
+        var deleteFailedCallbacks = 0
+
+        val deleted = deleteUploadedPuzzleAndHandleFailure(
+            imageId = "upload-1",
+            pieceCounts = listOf(PieceCountOption(rows = 4, columns = 6)),
+            deleteUserImage = { true },
+            clearProgress = { _, _ -> },
+            refreshImages = { },
+            onDeleted = { },
+            onDeleteFailed = {
+                deleteFailedCallbacks += 1
+            },
+        )
+
+        assertTrue(deleted)
+        assertEquals(0, deleteFailedCallbacks)
+    }
 }

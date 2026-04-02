@@ -56,6 +56,8 @@ fun JigsawNavGraph() {
     }
     val pieceCounts = remember { JigsawCatalog.pieceCountOptions() }
     val recentSessions = progressStore.recentSessions().collectAsStateWithLifecycle(initialValue = emptyList())
+    val uploadPrepareErrorMessage = stringResource(GalleryR.string.gallery_upload_prepare_error)
+    val uploadImportErrorMessage = stringResource(GalleryR.string.gallery_upload_import_error)
 
     var images by remember { mutableStateOf(emptyList<PuzzleImage>()) }
     var pendingUploadImport by remember { mutableStateOf<PendingUploadImport?>(null) }
@@ -71,15 +73,22 @@ fun JigsawNavGraph() {
         )
     }
 
-    suspend fun refreshImages(): List<PuzzleImage> {
-        val loadedImages = catalogRepository.loadImages()
+    suspend fun refreshImages(syncCatalog: Boolean = false): List<PuzzleImage> {
+        val loadedImages = if (syncCatalog) {
+            loadStartupCatalogImages(
+                syncCatalogIfNeeded = catalogRepository::syncIfNeeded,
+                loadCatalogImages = catalogRepository::loadImages,
+            )
+        } else {
+            catalogRepository.loadImages()
+        }
         progressStore.migrateLegacyImageIds(legacyImageIdMappings(loadedImages))
         images = loadedImages
         return loadedImages
     }
 
     LaunchedEffect(catalogRepository, progressStore) {
-        refreshImages()
+        refreshImages(syncCatalog = true)
     }
 
     LaunchedEffect(images, pendingImportedImageId) {
@@ -120,7 +129,7 @@ fun JigsawNavGraph() {
                 },
             )
             if (preparedImport == null) {
-                galleryMessage = context.getString(GalleryR.string.gallery_upload_prepare_error)
+                galleryMessage = uploadPrepareErrorMessage
             }
             isUploadInProgress = false
         }
@@ -161,7 +170,7 @@ fun JigsawNavGraph() {
                                 cropBottom = selection.bottom,
                             )
                             if (importedImage == null) {
-                                galleryMessage = context.getString(GalleryR.string.gallery_upload_import_error)
+                                galleryMessage = uploadImportErrorMessage
                             } else {
                                 refreshImages()
                                 pendingImportedImageId = importedImage.id
@@ -194,6 +203,27 @@ fun JigsawNavGraph() {
                     pieceCountOptions = pieceCounts,
                     recentSessions = recentSessions.value.filter { it.imageId == image.id },
                     onBack = { navController.popBackStack() },
+                    onDeleteUploadedPuzzle = if (image.isUserUploadedPuzzle()) {
+                        {
+                            scope.launch {
+                                deleteUploadedPuzzle(
+                                    imageId = image.id,
+                                    pieceCounts = pieceCounts,
+                                    deleteUserImage = catalogRepository::deleteUserImage,
+                                    clearProgress = progressStore::clearProgress,
+                                    refreshImages = { refreshImages() },
+                                    onDeleted = {
+                                        navController.popBackStack(
+                                            JigsawDestination.galleryRoute,
+                                            inclusive = false,
+                                        )
+                                    },
+                                )
+                            }
+                        }
+                    } else {
+                        null
+                    },
                     onPieceCountSelected = { option ->
                         navController.navigate(JigsawDestination.gameplay(image.id, option.totalPieces))
                     },
@@ -221,6 +251,9 @@ fun JigsawNavGraph() {
                     pieceCount = option,
                     progressStore = progressStore,
                     onBack = { navController.popBackStack() },
+                    onMorePuzzles = {
+                        navController.popBackStack(JigsawDestination.galleryRoute, inclusive = false)
+                    },
                 )
             }
         }
@@ -269,6 +302,37 @@ private data class PendingUploadImport(
 internal interface ReleasablePendingUploadImport {
     fun release()
 }
+
+internal suspend fun loadStartupCatalogImages(
+    syncCatalogIfNeeded: suspend () -> List<PuzzleImage>?,
+    loadCatalogImages: suspend () -> List<PuzzleImage>,
+): List<PuzzleImage> = syncCatalogIfNeeded() ?: loadCatalogImages()
+
+internal suspend fun deleteUploadedPuzzle(
+    imageId: String,
+    pieceCounts: List<com.puzzle.jigsaw.core.model.PieceCountOption>,
+    deleteUserImage: suspend (String) -> Boolean,
+    clearProgress: suspend (String, Int) -> Unit,
+    refreshImages: suspend () -> Unit,
+    onDeleted: () -> Unit,
+): Boolean {
+    val deleted = deleteUserImage(imageId)
+    if (!deleted) {
+        return false
+    }
+
+    pieceCounts.forEach { option ->
+        clearProgress(imageId, option.totalPieces)
+    }
+    onDeleted()
+    refreshImages()
+    return true
+}
+
+private fun PuzzleImage.isUserUploadedPuzzle(): Boolean =
+    storage == com.puzzle.jigsaw.core.model.PuzzleImageStorage.FILE &&
+        categoryId == "uploads" &&
+        id.startsWith("upload-")
 
 internal fun <T : ReleasablePendingUploadImport> replacePendingUploadImport(
     current: T?,

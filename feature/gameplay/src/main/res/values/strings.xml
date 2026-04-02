@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="gameplay_title_in_progress">Assemble the puzzle</string>
     <string name="gameplay_title_completed">Puzzle completed</string>
     <string name="gameplay_progress_summary">%1$s • %2$d%% complete</string>
     <string name="gameplay_progress_percent">%1$d%% complete</string>
@@ -12,6 +11,11 @@
     <string name="gameplay_reset_dialog_title">Reset puzzle?</string>
     <string name="gameplay_reset_dialog_message">Current progress for this puzzle size will be cleared.</string>
     <string name="gameplay_reset_confirm">Reset</string>
+    <string name="gameplay_delete">Delete</string>
+    <string name="gameplay_delete_dialog_title">Delete uploaded puzzle?</string>
+    <string name="gameplay_delete_dialog_message">This uploaded puzzle and all saved progress for it will be removed.</string>
+    <string name="gameplay_delete_confirm">Delete</string>
+    <string name="gameplay_more_puzzles">More puzzles</string>
     <string name="gameplay_cancel">Cancel</string>
 
     <plurals name="gameplay_piece_count">

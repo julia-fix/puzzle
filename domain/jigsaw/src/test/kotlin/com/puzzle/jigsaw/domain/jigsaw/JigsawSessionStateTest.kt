@@ -202,11 +202,13 @@ class JigsawSessionStateTest {
             boardPiecePositions = emptyMap(),
             pieceLinks = emptySet(),
             pieceOrder = pieceOrder,
+            elapsedPlayTimeMillis = 45_000L,
         )
 
         val progress = state.toProgress(updatedAtEpochMillis = 55L)
 
         assertEquals(pieceOrder, progress.pieceOrder)
+        assertEquals(45_000L, progress.elapsedPlayTimeMillis)
     }
 
     @Test
@@ -217,12 +219,14 @@ class JigsawSessionStateTest {
             pieceCount = option.totalPieces,
             placedPieceIds = emptySet(),
             pieceOrder = pieceOrder,
+            elapsedPlayTimeMillis = 77_000L,
             updatedAtEpochMillis = 1L,
         )
 
         val session = createSessionState(image, option, progress)
 
         assertEquals(pieceOrder, session.pieceOrder)
+        assertEquals(77_000L, session.elapsedPlayTimeMillis)
     }
 
     @Test

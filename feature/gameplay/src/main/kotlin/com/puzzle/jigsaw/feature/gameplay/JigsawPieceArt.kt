@@ -44,6 +44,11 @@ internal fun JigsawBoard(
     val resolvedBoardBackground = boardBackgroundColor ?: palette.boardBackground
     val resolvedEmptyFill = emptyFillColor ?: palette.emptyFill
     val resolvedBoardOutline = boardOutlineColor ?: palette.boardOutline
+    val renderCompletedBoardSeamlessly = shouldRenderCompletedBoardSeamlessly(
+        totalPieceCount = pieces.size,
+        placedPieceCount = placedPieceIds.size,
+        hasBitmap = assetBitmap != null,
+    )
 
     Box(
         modifier = modifier
@@ -67,6 +72,21 @@ internal fun JigsawBoard(
 
                 onDrawBehind {
                     drawRect(color = resolvedBoardBackground)
+                    if (renderCompletedBoardSeamlessly) {
+                        drawImage(
+                            image = assetBitmap!!,
+                            dstSize = dstSize,
+                        )
+                        if (resolvedBoardOutline.alpha > 0f) {
+                            drawPath(
+                                path = boardPaths.outlinePath,
+                                color = resolvedBoardOutline,
+                                style = Stroke(width = strokeWidth),
+                            )
+                        }
+                        return@onDrawBehind
+                    }
+
                     pieces.forEach { piece ->
                         val path = boardPaths.piecePaths.getValue(piece.pieceId)
                         val isPlaced = piece.pieceId in placedPieceIds
@@ -113,6 +133,12 @@ internal fun JigsawBoard(
             },
     )
 }
+
+internal fun shouldRenderCompletedBoardSeamlessly(
+    totalPieceCount: Int,
+    placedPieceCount: Int,
+    hasBitmap: Boolean,
+): Boolean = hasBitmap && totalPieceCount > 0 && placedPieceCount >= totalPieceCount
 
 @Composable
 internal fun JigsawLoosePiecePreview(

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="gameplay_title_in_progress">Соберите паззл</string>
     <string name="gameplay_title_completed">Паззл собран</string>
     <string name="gameplay_progress_summary">%1$s • %2$d%% собрано</string>
     <string name="gameplay_progress_percent">%1$d%% собрано</string>
@@ -12,6 +11,11 @@
     <string name="gameplay_reset_dialog_title">Сбросить паззл?</string>
     <string name="gameplay_reset_dialog_message">Текущий прогресс для этого размера паззла будет удалён.</string>
     <string name="gameplay_reset_confirm">Сбросить</string>
+    <string name="gameplay_delete">Удалить</string>
+    <string name="gameplay_delete_dialog_title">Удалить загруженный паззл?</string>
+    <string name="gameplay_delete_dialog_message">Этот загруженный паззл и весь сохранённый прогресс по нему будут удалены.</string>
+    <string name="gameplay_delete_confirm">Удалить</string>
+    <string name="gameplay_more_puzzles">Ещё пазлы</string>
     <string name="gameplay_cancel">Отмена</string>
 
     <plurals name="gameplay_piece_count">

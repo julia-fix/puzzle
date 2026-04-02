@@ -1,10 +1,17 @@
 package com.puzzle.jigsaw.data.progress
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
 import com.puzzle.jigsaw.core.model.JigsawProgress
 import com.puzzle.jigsaw.core.model.SavedBoardPiecePosition
 import com.puzzle.jigsaw.core.model.SavedPieceLink
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.runBlocking
 
 class DataStoreJigsawProgressStoreTest {
     @Test
@@ -130,5 +137,46 @@ class DataStoreJigsawProgressStoreTest {
         assertEquals(9, sessions.size)
         assertEquals("image-9", sessions.first().imageId)
         assertEquals("image-1", sessions.last().imageId)
+    }
+
+    @Test
+    fun `save and load gameplay background selection persists value`() = runBlocking {
+        val store = DataStoreJigsawProgressStore(FakePreferencesDataStore())
+
+        assertNull(store.loadGameplayBackgroundId())
+
+        store.saveGameplayBackgroundId("dark_grey")
+
+        assertEquals("dark_grey", store.loadGameplayBackgroundId())
+    }
+
+    @Test
+    fun `saveProgress and loadProgress preserve elapsed play time`() = runBlocking {
+        val store = DataStoreJigsawProgressStore(FakePreferencesDataStore())
+        val progress = JigsawProgress(
+            imageId = "image",
+            pieceCount = 24,
+            placedPieceIds = setOf(1, 2),
+            elapsedPlayTimeMillis = 87_000L,
+            updatedAtEpochMillis = 99L,
+        )
+
+        store.saveProgress(progress)
+
+        assertEquals(87_000L, store.loadProgress("image", 24)?.elapsedPlayTimeMillis)
+    }
+}
+
+private class FakePreferencesDataStore(
+    initialPreferences: Preferences = emptyPreferences(),
+) : DataStore<Preferences> {
+    private val preferencesState = MutableStateFlow(initialPreferences)
+
+    override val data: Flow<Preferences> = preferencesState
+
+    override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences {
+        val updatedPreferences = transform(preferencesState.value)
+        preferencesState.value = updatedPreferences
+        return updatedPreferences
     }
 }

@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="piececount_title">Выберите сложность</string>
+    <string name="piececount_title">Сложность</string>
     <string name="piececount_pieces_label">частей</string>
+    <string name="piececount_delete">Удалить</string>
+    <string name="piececount_delete_dialog_title">Удалить загруженный паззл?</string>
+    <string name="piececount_delete_dialog_message">Этот загруженный паззл и весь сохранённый прогресс по нему будут удалены.</string>
+    <string name="piececount_delete_confirm">Удалить</string>
+    <string name="piececount_cancel">Отмена</string>
 </resources>

@@ -39,6 +39,7 @@ data class JigsawSessionState(
     val boardPiecePositions: Map<Int, JigsawBoardPosition>,
     val pieceLinks: Set<JigsawPieceLink>,
     val pieceOrder: List<Int>,
+    val elapsedPlayTimeMillis: Long = 0L,
 ) {
     val totalPieces: Int = pieceCount.totalPieces
     val completionRatio: Float =
@@ -46,7 +47,10 @@ data class JigsawSessionState(
     val remainingPieceIds: List<Int> =
         pieceOrder.filterNot { it in placedPieceIds || it in boardPiecePositions }
 
-    fun toProgress(updatedAtEpochMillis: Long): JigsawProgress = JigsawProgress(
+    fun toProgress(
+        updatedAtEpochMillis: Long,
+        elapsedPlayTimeMillis: Long = this.elapsedPlayTimeMillis,
+    ): JigsawProgress = JigsawProgress(
         imageId = image.id,
         pieceCount = totalPieces,
         placedPieceIds = placedPieceIds,
@@ -64,6 +68,7 @@ data class JigsawSessionState(
             )
         },
         pieceOrder = pieceOrder,
+        elapsedPlayTimeMillis = elapsedPlayTimeMillis.coerceAtLeast(0L),
         updatedAtEpochMillis = updatedAtEpochMillis,
     )
 }
@@ -127,6 +132,7 @@ fun createSessionState(
         boardPiecePositions = boardPiecePositions,
         pieceLinks = pieceLinks,
         pieceOrder = pieceOrder,
+        elapsedPlayTimeMillis = progress?.elapsedPlayTimeMillis?.coerceAtLeast(0L) ?: 0L,
     )
 }
 

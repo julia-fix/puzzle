@@ -28,10 +28,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -47,10 +50,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.key
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,7 +81,9 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
@@ -98,7 +103,9 @@ import com.puzzle.jigsaw.domain.jigsaw.JigsawSessionState
 import com.puzzle.jigsaw.domain.jigsaw.connectedBoardPieceIds
 import com.puzzle.jigsaw.domain.jigsaw.createJigsawPieceLayout
 import com.puzzle.jigsaw.domain.jigsaw.createSessionState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.roundToInt
@@ -109,25 +116,90 @@ fun GameplayRoute(
     pieceCount: PieceCountOption,
     progressStore: JigsawProgressStore,
     onBack: () -> Unit,
+    onMorePuzzles: () -> Unit,
 ) {
     var sessionState by remember(image.id, pieceCount.totalPieces) {
         mutableStateOf<JigsawSessionState?>(null)
     }
+    var activeTimerStartedAtEpochMillis by remember(image.id, pieceCount.totalPieces) {
+        mutableStateOf<Long?>(null)
+    }
+    var selectedBackgroundId by remember {
+        mutableStateOf(DefaultGameplayBackgroundId)
+    }
+    var isBackgroundSelectionLoaded by remember {
+        mutableStateOf(false)
+    }
     val scope = rememberCoroutineScope()
+    val latestSessionState by rememberUpdatedState(sessionState)
+
+    fun nowEpochMillis(): Long = System.currentTimeMillis()
+
+    fun currentElapsedPlayTimeMillis(): Long {
+        val currentSession = latestSessionState ?: return 0L
+        return com.puzzle.jigsaw.feature.gameplay.currentElapsedPlayTimeMillis(
+            baseElapsedPlayTimeMillis = currentSession.elapsedPlayTimeMillis,
+            activeStartedAtEpochMillis = activeTimerStartedAtEpochMillis,
+            nowEpochMillis = nowEpochMillis(),
+        )
+    }
 
     fun commitSession(updated: JigsawSessionState) {
-        sessionState = updated
+        val updatedAtEpochMillis = nowEpochMillis()
+        val elapsedPlayTimeMillis = currentElapsedPlayTimeMillis()
+        val isCompleted = updated.completionRatio >= 1f
+        val stateToPersist = if (isCompleted) {
+            activeTimerStartedAtEpochMillis = null
+            updated.copy(elapsedPlayTimeMillis = elapsedPlayTimeMillis)
+        } else {
+            updated.copy(elapsedPlayTimeMillis = latestSessionState?.elapsedPlayTimeMillis ?: 0L)
+        }
+        sessionState = stateToPersist
         scope.launch {
-            progressStore.saveProgress(updated.toProgress(System.currentTimeMillis()))
+            progressStore.saveProgress(
+                stateToPersist.toProgress(
+                    updatedAtEpochMillis = updatedAtEpochMillis,
+                    elapsedPlayTimeMillis = elapsedPlayTimeMillis,
+                ),
+            )
         }
     }
 
     LaunchedEffect(image.id, pieceCount.totalPieces, progressStore) {
+        selectedBackgroundId = GameplayBackgroundStyle
+            .fromId(progressStore.loadGameplayBackgroundId())
+            .id
+        isBackgroundSelectionLoaded = true
         val progress = progressStore.loadProgress(image.id, pieceCount.totalPieces)
         sessionState = createSessionState(image, pieceCount, progress)
     }
 
-    if (sessionState == null) {
+    LifecycleResumeEffect(sessionState?.completionRatio) {
+        val currentSession = latestSessionState
+        if (currentSession != null && currentSession.completionRatio < 1f && activeTimerStartedAtEpochMillis == null) {
+            activeTimerStartedAtEpochMillis = nowEpochMillis()
+        }
+        onPauseOrDispose {
+            val pausedSession = latestSessionState ?: return@onPauseOrDispose
+            val startedAtEpochMillis = activeTimerStartedAtEpochMillis ?: return@onPauseOrDispose
+            val pausedAtEpochMillis = nowEpochMillis()
+            val elapsedPlayTimeMillis = com.puzzle.jigsaw.feature.gameplay.currentElapsedPlayTimeMillis(
+                baseElapsedPlayTimeMillis = pausedSession.elapsedPlayTimeMillis,
+                activeStartedAtEpochMillis = startedAtEpochMillis,
+                nowEpochMillis = pausedAtEpochMillis,
+            )
+            activeTimerStartedAtEpochMillis = null
+            val persistedSession = pausedSession.copy(elapsedPlayTimeMillis = elapsedPlayTimeMillis)
+            sessionState = persistedSession
+            scope.launch {
+                progressStore.saveProgress(
+                    persistedSession.toProgress(updatedAtEpochMillis = pausedAtEpochMillis),
+                )
+            }
+        }
+    }
+
+    if (sessionState == null || !isBackgroundSelectionLoaded) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
@@ -137,13 +209,40 @@ fun GameplayRoute(
         return
     }
 
+    val elapsedPlayTimeMillis by produceState(
+        initialValue = sessionState!!.elapsedPlayTimeMillis,
+        key1 = sessionState!!.elapsedPlayTimeMillis,
+        key2 = activeTimerStartedAtEpochMillis,
+    ) {
+        while (true) {
+            value = currentElapsedPlayTimeMillis()
+            if (activeTimerStartedAtEpochMillis == null) {
+                break
+            }
+            delay(1_000L)
+        }
+    }
+
     GameplayScreen(
         sessionState = sessionState!!,
+        elapsedPlayTimeMillis = elapsedPlayTimeMillis,
+        selectedBackgroundId = selectedBackgroundId,
         onBack = onBack,
+        onMorePuzzles = onMorePuzzles,
         onSessionStateChange = ::commitSession,
+        onBackgroundSelected = { backgroundId ->
+            if (selectedBackgroundId == backgroundId) {
+                return@GameplayScreen
+            }
+            selectedBackgroundId = backgroundId
+            scope.launch {
+                progressStore.saveGameplayBackgroundId(backgroundId)
+            }
+        },
         onResetProgress = {
             val reset = createSessionState(image, pieceCount, progress = null)
             sessionState = reset
+            activeTimerStartedAtEpochMillis = nowEpochMillis()
             scope.launch {
                 progressStore.clearProgress(image.id, pieceCount.totalPieces)
             }
@@ -154,8 +253,12 @@ fun GameplayRoute(
 @Composable
 fun GameplayScreen(
     sessionState: JigsawSessionState,
+    elapsedPlayTimeMillis: Long,
+    selectedBackgroundId: String,
     onBack: () -> Unit,
+    onMorePuzzles: () -> Unit,
     onSessionStateChange: (JigsawSessionState) -> Unit,
+    onBackgroundSelected: (String) -> Unit,
     onResetProgress: () -> Unit,
 ) {
     val pieceLayout = remember(sessionState.pieceCount.rows, sessionState.pieceCount.columns) {
@@ -189,9 +292,6 @@ fun GameplayScreen(
     var isResetConfirmationVisible by remember { mutableStateOf(false) }
     var isBackgroundPickerExpanded by remember { mutableStateOf(false) }
     var headerHeightPx by remember { mutableIntStateOf(0) }
-    var selectedBackgroundId by rememberSaveable(sessionState.image.id, sessionState.pieceCount.totalPieces) {
-        mutableStateOf(GameplayBackgroundStyle.DARK_GREEN.id)
-    }
     var trayTopRowSizeHint by remember(sessionState.image.id, sessionState.pieceCount.totalPieces) {
         mutableIntStateOf(0)
     }
@@ -201,6 +301,30 @@ fun GameplayScreen(
     val latestTrayItemBounds by rememberUpdatedState(trayItemBounds.toMap())
     val selectedBackground = remember(selectedBackgroundId) {
         GameplayBackgroundStyle.fromId(selectedBackgroundId)
+    }
+    val isCompleted = sessionState.completionRatio >= 1f
+    val completionPercent = (sessionState.completionRatio * 100).roundToInt()
+    val totalPiecesLabel = pluralStringResource(
+        R.plurals.gameplay_piece_count,
+        sessionState.pieceCount.totalPieces,
+        sessionState.pieceCount.totalPieces,
+    )
+    val titleText = if (isCompleted) {
+        stringResource(R.string.gameplay_title_completed)
+    } else {
+        totalPiecesLabel
+    }
+    val progressSummary = if (isCompleted) {
+        stringResource(
+            R.string.gameplay_progress_summary,
+            totalPiecesLabel,
+            completionPercent,
+        )
+    } else {
+        stringResource(R.string.gameplay_progress_percent, completionPercent)
+    }
+    val timerText = remember(elapsedPlayTimeMillis) {
+        formatElapsedPlayTime(elapsedPlayTimeMillis)
     }
 
     LaunchedEffect(sessionState.remainingPieceIds, pendingTrayRemovalPieceIds) {
@@ -266,6 +390,7 @@ fun GameplayScreen(
                             headerHeightPx = coordinates.size.height
                         },
                     color = selectedBackground.headerScrim,
+                    contentColor = selectedBackground.headerContentColor,
                 ) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Row(
@@ -280,29 +405,33 @@ fun GameplayScreen(
                                 modifier = Modifier.weight(1f),
                                 verticalAlignment = Alignment.Top,
                             ) {
-                                PuzzleBackButton(onClick = onBack)
+                                PuzzleBackButton(
+                                    onClick = onBack,
+                                    tint = selectedBackground.headerContentColor,
+                                )
                                 Column(
                                     modifier = Modifier.padding(top = 8.dp),
                                     verticalArrangement = Arrangement.spacedBy(2.dp),
                                 ) {
-                                    val completionPercent = (sessionState.completionRatio * 100).roundToInt()
-                                    val totalPiecesLabel = pluralStringResource(
-                                        R.plurals.gameplay_piece_count,
-                                        sessionState.pieceCount.totalPieces,
-                                        sessionState.pieceCount.totalPieces,
+                                    Text(
+                                        text = titleText,
+                                        style = MaterialTheme.typography.titleMedium,
                                     )
                                     Text(
-                                        text = totalPiecesLabel,
-                                    )
-                                    Text(
-                                        text = stringResource(
-                                            R.string.gameplay_progress_percent,
-                                            completionPercent,
-                                        ),
+                                        text = progressSummary,
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = selectedBackground.headerSupportingContentColor,
                                     )
                                 }
+                            }
+                            if (!isCompleted) {
+                                Text(
+                                    text = timerText,
+                                    modifier = Modifier.padding(horizontal = 12.dp),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = selectedBackground.headerContentColor,
+                                )
                             }
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -317,7 +446,21 @@ fun GameplayScreen(
                                     contentDescription = stringResource(R.string.gameplay_background_picker),
                                     showCog = true,
                                 )
-                                TextButton(onClick = { isResetConfirmationVisible = true }) {
+                                Button(
+                                    onClick = { isResetConfirmationVisible = true },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = selectedBackground.headerContentColor.copy(alpha = 0.12f),
+                                        contentColor = selectedBackground.headerContentColor,
+                                        disabledContainerColor = selectedBackground.headerContentColor.copy(alpha = 0.08f),
+                                        disabledContentColor = selectedBackground.headerContentColor.copy(alpha = 0.5f),
+                                    ),
+                                    border = BorderStroke(
+                                        width = 1.dp,
+                                        color = selectedBackground.headerContentColor.copy(alpha = 0.28f),
+                                    ),
+                                    shape = MaterialTheme.shapes.extraLarge,
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                                ) {
                                     Text(stringResource(R.string.gameplay_reset))
                                 }
                             }
@@ -443,7 +586,7 @@ fun GameplayScreen(
                             boardOutlineColor = Color.Transparent,
                             modifier = Modifier
                                 .fillMaxSize(),
-                        )
+                            )
                     }
                     Box(
                         modifier = Modifier
@@ -550,6 +693,33 @@ fun GameplayScreen(
                         modifier = Modifier.padding(top = boardCardHeight + 16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
+                        if (isCompleted) {
+                            Text(
+                                text = timerText,
+                                modifier = Modifier.fillMaxWidth(),
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.SemiBold,
+                                color = selectedBackground.headerContentColor,
+                                textAlign = TextAlign.Center,
+                            )
+                            Button(
+                                onClick = onMorePuzzles,
+                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = selectedBackground.headerContentColor.copy(alpha = 0.12f),
+                                    contentColor = selectedBackground.headerContentColor,
+                                ),
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = selectedBackground.headerContentColor.copy(alpha = 0.28f),
+                                ),
+                                shape = MaterialTheme.shapes.extraLarge,
+                                contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
+                            ) {
+                                Text(stringResource(R.string.gameplay_more_puzzles))
+                            }
+                        }
                         LoosePiecesTrayRow(
                             scrollState = trayScrollState,
                             remainingPieceIds = sessionState.remainingPieceIds,
@@ -699,11 +869,11 @@ fun GameplayScreen(
         }
         }
         if (isBackgroundPickerExpanded) {
-                            BackgroundPickerPanel(
+                                BackgroundPickerPanel(
                                 selectedBackground = selectedBackground,
                                 patternBitmap = backgroundPatternBitmap,
                                 onBackgroundSelected = { background ->
-                                    selectedBackgroundId = background.id
+                                    onBackgroundSelected(background.id)
                                     isBackgroundPickerExpanded = false
                 },
                 modifier = Modifier
@@ -951,6 +1121,9 @@ private fun LoosePiecesTrayRow(
     val renderedRows = remember(trayRows, trayRowCount) {
         if (trayRowCount <= 1) listOf(trayRows.top) else listOf(trayRows.top, trayRows.bottom)
     }
+    val hasVisibleTrayEntries = remember(renderedRows) {
+        renderedRows.any(List<TrayEntry>::isNotEmpty)
+    }
 
     Box(
         modifier = Modifier
@@ -968,60 +1141,68 @@ private fun LoosePiecesTrayRow(
             modifier = Modifier.padding(horizontal = trayHorizontalPadding),
             verticalArrangement = Arrangement.spacedBy(TrayRowSpacing),
         ) {
-            renderedRows.forEach { rowEntries ->
-                Row(horizontalArrangement = Arrangement.spacedBy(TrayItemSpacing)) {
-                    rowEntries.forEach { entry ->
-                        key(entry.key) {
-                            when (entry) {
-                                is TrayEntry.Piece -> {
-                                    val pieceId = entry.pieceId
-                                    val piece = piecesById.getValue(pieceId)
-                                    val isHidden = pieceId in hiddenPieceIds
-                                    val isPendingTrayRemoval = pieceId in pendingTrayRemovalPieceIds
-                                    TrayPieceCard(
-                                        pieceId = pieceId,
-                                        pieceCount = pieceCount,
-                                        piece = piece,
-                                        assetBitmap = assetBitmap,
-                                        modifier = Modifier,
-                                        boardCellWidth = trayReferenceCellWidth,
-                                        boardCellHeight = trayReferenceCellHeight,
-                                        slotSize = DpSize(
-                                            width = trayLayout.slotWidths.getValue(pieceId),
-                                            height = trayLayout.slotHeight,
-                                        ),
-                                        previewOffset = trayLayout.offsets.getValue(pieceId),
-                                        overlayOriginInRoot = overlayOriginInRoot,
-                                        collapsed = entry.collapsed,
-                                        ghosted =
-                                            pieceId == draggedPieceId ||
-                                                isPendingTrayRemoval,
-                                        visible = !isHidden,
-                                        onPositioned = { bounds ->
-                                            onTrayItemBoundsChanged(pieceId, bounds)
-                                        },
-                                        onDragStarted = { touchOffset ->
-                                            onTrayDragStarted(pieceId, piece, touchOffset)
-                                        },
-                                        onDragged = { dragAmount ->
-                                            onTrayDragged(pieceId, dragAmount)
-                                        },
-                                        onDragEnded = {
-                                            onTrayDragEnded(pieceId)
-                                        },
-                                    )
-                                }
+            if (!hasVisibleTrayEntries) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(trayLayout.slotHeight),
+                )
+            } else {
+                renderedRows.forEach { rowEntries ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(TrayItemSpacing)) {
+                        rowEntries.forEach { entry ->
+                            key(entry.key) {
+                                when (entry) {
+                                    is TrayEntry.Piece -> {
+                                        val pieceId = entry.pieceId
+                                        val piece = piecesById.getValue(pieceId)
+                                        val isHidden = pieceId in hiddenPieceIds
+                                        val isPendingTrayRemoval = pieceId in pendingTrayRemovalPieceIds
+                                        TrayPieceCard(
+                                            pieceId = pieceId,
+                                            pieceCount = pieceCount,
+                                            piece = piece,
+                                            assetBitmap = assetBitmap,
+                                            modifier = Modifier,
+                                            boardCellWidth = trayReferenceCellWidth,
+                                            boardCellHeight = trayReferenceCellHeight,
+                                            slotSize = DpSize(
+                                                width = trayLayout.slotWidths.getValue(pieceId),
+                                                height = trayLayout.slotHeight,
+                                            ),
+                                            previewOffset = trayLayout.offsets.getValue(pieceId),
+                                            overlayOriginInRoot = overlayOriginInRoot,
+                                            collapsed = entry.collapsed,
+                                            ghosted =
+                                                pieceId == draggedPieceId ||
+                                                    isPendingTrayRemoval,
+                                            visible = !isHidden,
+                                            onPositioned = { bounds ->
+                                                onTrayItemBoundsChanged(pieceId, bounds)
+                                            },
+                                            onDragStarted = { touchOffset ->
+                                                onTrayDragStarted(pieceId, piece, touchOffset)
+                                            },
+                                            onDragged = { dragAmount ->
+                                                onTrayDragged(pieceId, dragAmount)
+                                            },
+                                            onDragEnded = {
+                                                onTrayDragEnded(pieceId)
+                                            },
+                                        )
+                                    }
 
-                                is TrayEntry.Placeholder -> {
-                                    TrayPlaceholderSlot(
-                                        width = entry.width,
-                                        height = trayLayout.slotHeight,
-                                    )
+                                    is TrayEntry.Placeholder -> {
+                                        TrayPlaceholderSlot(
+                                            width = entry.width,
+                                            height = trayLayout.slotHeight,
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-                }
+                }                
             }
         }
     }
@@ -1354,10 +1535,18 @@ private enum class GameplayBackgroundStyle(
     );
 
     companion object {
-        fun fromId(id: String): GameplayBackgroundStyle =
+        fun fromId(id: String?): GameplayBackgroundStyle =
             entries.firstOrNull { it.id == id } ?: MEDIUM_GREY
     }
+
+    val headerContentColor: Color
+        get() = Color.White.copy(alpha = 0.96f)
+
+    val headerSupportingContentColor: Color
+        get() = Color.White.copy(alpha = 0.74f)
 }
+
+private val DefaultGameplayBackgroundId: String = GameplayBackgroundStyle.MEDIUM_GREY.id
 
 @Composable
 private fun BackgroundSwatchButton(
@@ -1415,7 +1604,7 @@ private fun BackgroundPickerPanel(
         Text(
             text = stringResource(R.string.gameplay_background_picker_title),
             style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = selectedBackground.headerContentColor,
         )
         GameplayBackgroundStyle.entries
             .chunked(5)

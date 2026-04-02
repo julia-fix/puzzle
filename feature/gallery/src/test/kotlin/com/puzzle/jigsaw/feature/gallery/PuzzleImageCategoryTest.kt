@@ -55,6 +55,40 @@ class PuzzleImageCategoryTest {
         assertEquals(0f, ordered.single().completionRatio)
     }
 
+    @Test
+    fun orderCategoryImages_usesLatestSessionProgressForEachImage() {
+        val images = listOf(
+            image(id = "resumable", categoryId = "nature", categoryName = "Nature"),
+            image(id = "done", categoryId = "nature", categoryName = "Nature"),
+        )
+        val sessions = listOf(
+            RecentPuzzleSession(
+                imageId = "resumable",
+                pieceCount = 24,
+                placedPieces = 24,
+                updatedAtEpochMillis = 1L,
+            ),
+            RecentPuzzleSession(
+                imageId = "resumable",
+                pieceCount = 100,
+                placedPieces = 40,
+                updatedAtEpochMillis = 2L,
+            ),
+            RecentPuzzleSession(
+                imageId = "done",
+                pieceCount = 24,
+                placedPieces = 24,
+                updatedAtEpochMillis = 3L,
+            ),
+        )
+
+        val ordered = orderCategoryImages(images, sessions)
+
+        assertEquals(listOf("resumable", "done"), ordered.map { it.image.id })
+        assertEquals(0.4f, ordered.first().completionRatio, 0.0001f)
+        assertEquals(2L, ordered.first().updatedAtEpochMillis)
+    }
+
     private fun image(
         id: String,
         categoryId: String,

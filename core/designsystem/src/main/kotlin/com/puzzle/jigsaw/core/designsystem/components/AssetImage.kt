@@ -16,6 +16,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import com.puzzle.jigsaw.core.model.PuzzleImageStorage
 import java.io.File
+import java.io.InputStream
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 const val PuzzleImageAspectRatio = 4f / 5f
 
@@ -26,15 +30,34 @@ fun rememberPuzzleBitmap(
 ): ImageBitmap? {
     val context = LocalContext.current
     val bitmap = produceState<ImageBitmap?>(initialValue = null, path, storage) {
-        value = runCatching {
-            when (storage) {
-                PuzzleImageStorage.ASSET -> context.assets.open(path)
-                PuzzleImageStorage.FILE -> File(path).inputStream()
-            }.use(BitmapFactory::decodeStream)?.asImageBitmap()
-        }.getOrNull()
+        value = loadPuzzleImageResource(
+            path = path,
+            storage = storage,
+            openStream = { resolvedPath, resolvedStorage ->
+                when (resolvedStorage) {
+                    PuzzleImageStorage.ASSET -> context.assets.open(resolvedPath)
+                    PuzzleImageStorage.FILE -> File(resolvedPath).inputStream()
+                }
+            },
+            decodeResource = { inputStream ->
+                BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
+            },
+        )
     }
 
     return bitmap.value
+}
+
+internal suspend fun <T> loadPuzzleImageResource(
+    path: String,
+    storage: PuzzleImageStorage,
+    decodeDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    openStream: (path: String, storage: PuzzleImageStorage) -> InputStream,
+    decodeResource: (InputStream) -> T?,
+): T? = withContext(decodeDispatcher) {
+    runCatching {
+        openStream(path, storage).use(decodeResource)
+    }.getOrNull()
 }
 
 @Composable

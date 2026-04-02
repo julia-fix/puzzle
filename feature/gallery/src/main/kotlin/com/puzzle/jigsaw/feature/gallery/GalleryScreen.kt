@@ -1,5 +1,6 @@
 package com.puzzle.jigsaw.feature.gallery
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyRow
@@ -156,14 +158,27 @@ fun GalleryScreen(
                         fontWeight = FontWeight.Bold,
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    TextButton(
+                    Button(
                         onClick = onUploadClick,
                         enabled = !isUploadInProgress && uploadCropState == null,
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                        ),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
                     ) {
                         if (isUploadInProgress) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
                         } else {
                             Text(
@@ -390,7 +405,7 @@ private fun CropPreview(
                             y = offset.y.roundToInt(),
                         )
                     }
-                    .size(
+                    .requiredSize(
                         width = with(density) { imageWidthPx.toDp() },
                         height = with(density) { imageHeightPx.toDp() },
                     ),

@@ -47,4 +47,8 @@ class AssetPuzzleCatalogRepository(
             cropBottom = cropBottom,
         )
     }
+
+    suspend fun deleteUserImage(imageId: String): Boolean = withContext(Dispatchers.IO) {
+        uploadedPuzzleStore.deleteImage(imageId)
+    }
 }

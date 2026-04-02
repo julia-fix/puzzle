@@ -175,6 +175,42 @@ class GameplayInteractionLogicTest {
         assertEquals(GameplayDragFinishResult.Cancelled, result)
     }
 
+    @Test
+    fun `resolveGameplayDragFinish returns board piece to empty tray when empty tray area is available`() {
+        val result = resolveGameplayDragFinish(
+            dragState = dragState(
+                pieceId = 0,
+                clusterPieceIds = setOf(0),
+                source = PieceDragSource.BOARD,
+                initialPointer = Offset(40f, 230f),
+                grabFractionX = 0.5f,
+                grabFractionY = 0.5f,
+                startPositions = mapOf(0 to Offset(20f, 20f)),
+            ),
+            sessionState = sessionState(
+                boardPiecePositions = mapOf(
+                    0 to JigsawBoardPosition(x = 0.6f, y = 0.6f),
+                ),
+                pieceOrder = listOf(0, 1, 2, 3),
+            ),
+            boardContentRect = Rect(0f, 0f, 200f, 200f),
+            boardCellWidthPx = 100f,
+            boardCellHeightPx = 100f,
+            trayRowBounds = Rect(0f, 210f, 200f, 270f),
+            trayItemBounds = emptyMap(),
+            trayLayoutPx = trayLayoutPx,
+            trayRowCount = 1,
+            trayTopRowSize = 0,
+            trayRowSpacingPx = 4f,
+            piecesById = piecesById,
+        )
+
+        val committed = result as GameplayDragFinishResult.Committed
+        assertTrue(0 in committed.state.remainingPieceIds)
+        assertFalse(0 in committed.state.boardPiecePositions)
+        assertEquals(committed.state.remainingPieceIds.size, committed.trayTopRowSize)
+    }
+
     private fun sessionState(
         placedPieceIds: Set<Int> = emptySet(),
         boardPiecePositions: Map<Int, JigsawBoardPosition> = emptyMap(),

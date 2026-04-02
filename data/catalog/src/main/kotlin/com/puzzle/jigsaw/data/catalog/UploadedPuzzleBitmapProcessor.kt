@@ -1,5 +1,6 @@
 package com.puzzle.jigsaw.data.catalog
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -82,6 +83,7 @@ internal class UploadedPuzzleBitmapProcessor(
             decodeWithBitmapFactory(sourceUri)
         }
 
+    @SuppressLint("NewApi")
     private fun decodeWithImageDecoder(sourceUri: Uri): Bitmap? = runCatching {
         val source = ImageDecoder.createSource(context.contentResolver, sourceUri)
         ImageDecoder.decodeBitmap(source) { decoder, info, _ ->

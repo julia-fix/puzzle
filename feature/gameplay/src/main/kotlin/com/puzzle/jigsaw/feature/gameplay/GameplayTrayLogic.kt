@@ -159,7 +159,9 @@ internal fun reorderTrayRows(
     val bottom = baseRows.bottom.filterNot { it in movedPieceIds }.toMutableList()
     val targetRow = if (dropTarget.rowIndex == 0) top else bottom
     targetRow.addAll(dropTarget.indexInRow.coerceIn(0, targetRow.size), movedBlock)
-    rebalanceTrayPieceRows(top, bottom)
+    if (rowCount > 1) {
+        rebalanceTrayPieceRows(top, bottom)
+    }
     return TrayRows(top = top, bottom = bottom)
 }
 
@@ -168,12 +170,15 @@ internal fun insertIntoTrayRows(
     currentBottom: List<Int>,
     movedPieceIds: List<Int>,
     dropTarget: TrayDropTarget,
+    rowCount: Int,
 ): TrayRows<Int> {
     val top = currentTop.toMutableList()
     val bottom = currentBottom.toMutableList()
     val targetRow = if (dropTarget.rowIndex == 0) top else bottom
     targetRow.addAll(dropTarget.indexInRow.coerceIn(0, targetRow.size), movedPieceIds)
-    rebalanceTrayPieceRows(top, bottom)
+    if (rowCount > 1) {
+        rebalanceTrayPieceRows(top, bottom)
+    }
     return TrayRows(top = top, bottom = bottom)
 }
 
@@ -223,7 +228,9 @@ internal fun removeFromTrayRows(
     val baseRows = splitTrayPieceIds(orderedPieceIds, rowCount, topRowSize)
     val top = baseRows.top.filterNot { it in removedPieceIds }.toMutableList()
     val bottom = baseRows.bottom.filterNot { it in removedPieceIds }.toMutableList()
-    rebalanceTrayPieceRows(top, bottom)
+    if (rowCount > 1) {
+        rebalanceTrayPieceRows(top, bottom)
+    }
     return TrayRows(top = top, bottom = bottom)
 }
 

@@ -18,10 +18,11 @@ fun orderCategoryImages(
         .groupBy(RecentPuzzleSession::imageId)
         .mapNotNull { (imageId, sessions) ->
             val image = imagesById[imageId] ?: return@mapNotNull null
+            val latestSession = sessions.maxByOrNull(RecentPuzzleSession::updatedAtEpochMillis) ?: return@mapNotNull null
             imageId to PuzzleImageProgress(
                 image = image,
-                completionRatio = sessions.maxOfOrNull(RecentPuzzleSession::completionRatio) ?: 0f,
-                updatedAtEpochMillis = sessions.maxOfOrNull(RecentPuzzleSession::updatedAtEpochMillis) ?: 0L,
+                completionRatio = latestSession.completionRatio,
+                updatedAtEpochMillis = latestSession.updatedAtEpochMillis,
             )
         }
         .toMap()

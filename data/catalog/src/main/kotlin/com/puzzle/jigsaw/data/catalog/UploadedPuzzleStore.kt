@@ -74,4 +74,6 @@ internal class UploadedPuzzleStore(
             importedBitmaps.recycle()
         }
     }
+
+    fun deleteImage(imageId: String): Boolean = fileStore.deleteImage(imageId)
 }

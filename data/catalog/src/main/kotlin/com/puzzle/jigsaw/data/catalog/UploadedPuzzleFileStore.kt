@@ -74,6 +74,21 @@ internal class UploadedPuzzleFileStore(
         }
     }
 
+    fun deleteImage(imageId: String): Boolean {
+        if (!imageId.startsWith("upload-")) {
+            return false
+        }
+
+        val uploadsRoot = uploadsRootDir().canonicalFile
+        val target = File(uploadsRoot, imageId).canonicalFile
+        if (target.parentFile != uploadsRoot || !target.isDirectory) {
+            return false
+        }
+
+        deleteDirectory(target)
+        return !target.exists()
+    }
+
     private fun loadEntry(directory: File): UploadedPuzzleEntry? {
         val metadata = loadMetadata(File(directory, UploadMetadataFileName)) ?: return null
         val fullFile = File(directory, UploadFullFileName).takeIf(File::isFile) ?: return null

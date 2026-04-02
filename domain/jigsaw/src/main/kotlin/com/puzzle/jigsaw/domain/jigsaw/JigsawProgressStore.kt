@@ -11,6 +11,9 @@ interface JigsawProgressStore {
 
     suspend fun clearProgress(imageId: String, pieceCount: Int)
 
+    suspend fun loadGameplayBackgroundId(): String?
+
+    suspend fun saveGameplayBackgroundId(backgroundId: String)
+
     fun recentSessions(): Flow<List<RecentPuzzleSession>>
 }
-

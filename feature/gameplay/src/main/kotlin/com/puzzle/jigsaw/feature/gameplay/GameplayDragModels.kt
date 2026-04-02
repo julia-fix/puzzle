@@ -95,21 +95,24 @@ internal class PieceDragState(
         TrayPieceLiftOffsetPx * liftProgress(trayRowBounds)
 
     private fun expansionProgress(trayRowBounds: Rect?): Float {
-        if (source != PieceDragSource.TRAY || trayRowBounds == null) return 1f
-        val travel = (trayRowBounds.height * TrayPieceResizeTravelFraction).coerceAtLeast(1f)
-        return ((trayRowBounds.top - currentPointer.y) / travel).coerceIn(0f, 1f)
+        if (source != PieceDragSource.TRAY || !hasUsableTrayBounds(trayRowBounds)) return 1f
+        val resolvedTrayRowBounds = trayRowBounds!!
+        val travel = (resolvedTrayRowBounds.height * TrayPieceResizeTravelFraction).coerceAtLeast(1f)
+        return ((resolvedTrayRowBounds.top - currentPointer.y) / travel).coerceIn(0f, 1f)
     }
 
     private fun contractionProgress(trayRowBounds: Rect?): Float {
-        if (source != PieceDragSource.BOARD || trayRowBounds == null) return 1f
-        val travel = (trayRowBounds.height * TrayPieceResizeTravelFraction).coerceAtLeast(1f)
-        return ((trayRowBounds.top - currentPointer.y) / travel).coerceIn(0f, 1f)
+        if (source != PieceDragSource.BOARD || !hasUsableTrayBounds(trayRowBounds)) return 1f
+        val resolvedTrayRowBounds = trayRowBounds!!
+        val travel = (resolvedTrayRowBounds.height * TrayPieceResizeTravelFraction).coerceAtLeast(1f)
+        return ((resolvedTrayRowBounds.top - currentPointer.y) / travel).coerceIn(0f, 1f)
     }
 
     private fun liftProgress(trayRowBounds: Rect?): Float {
-        if (source != PieceDragSource.TRAY || trayRowBounds == null) return 0f
-        val travel = (trayRowBounds.height * 0.65f).coerceAtLeast(1f)
-        return ((trayRowBounds.top - currentPointer.y) / travel).coerceIn(0f, 1f)
+        if (source != PieceDragSource.TRAY || !hasUsableTrayBounds(trayRowBounds)) return 0f
+        val resolvedTrayRowBounds = trayRowBounds!!
+        val travel = (resolvedTrayRowBounds.height * 0.65f).coerceAtLeast(1f)
+        return ((resolvedTrayRowBounds.top - currentPointer.y) / travel).coerceIn(0f, 1f)
     }
 
     private fun previewProgress(trayRowBounds: Rect?): Float {
@@ -122,6 +125,9 @@ internal class PieceDragState(
         }
     }
 }
+
+private fun hasUsableTrayBounds(trayRowBounds: Rect?): Boolean =
+    trayRowBounds != null && trayRowBounds.height > 0f
 
 internal enum class PieceDragSource {
     TRAY,

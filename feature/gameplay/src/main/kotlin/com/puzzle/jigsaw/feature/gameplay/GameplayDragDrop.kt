@@ -78,6 +78,7 @@ internal fun resolveGameplayDragFinish(
                 currentBottom = currentRows.bottom,
                 movedPieceIds = sessionState.pieceOrder.filter { it in dragState.clusterPieceIds },
                 dropTarget = resolvedDropTarget,
+                rowCount = trayRowCount,
             )
         } else {
             reorderTrayRows(

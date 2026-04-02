@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.map
 private const val STORE_NAME = "jigsaw_progress"
 private const val PROGRESS_PREFIX = "progress:"
 private const val UPDATED_PREFIX = "updated:"
+private const val ELAPSED_PREFIX = "elapsed:"
+private const val GAMEPLAY_BACKGROUND_KEY = "gameplay_background"
 
 private val Context.progressDataStore: DataStore<Preferences> by preferencesDataStore(name = STORE_NAME)
 
@@ -48,10 +50,12 @@ class DataStoreJigsawProgressStore(
             recordsToRemove.forEach { record ->
                 preferences.remove(progressKey(record.imageId, record.pieceCount))
                 preferences.remove(updatedKey(record.imageId, record.pieceCount))
+                preferences.remove(elapsedKey(record.imageId, record.pieceCount))
             }
             migratedRecords.forEach { record ->
                 preferences[progressKey(record.imageId, record.pieceCount)] = record.payload
                 preferences[updatedKey(record.imageId, record.pieceCount)] = record.updatedAtEpochMillis
+                preferences[elapsedKey(record.imageId, record.pieceCount)] = record.elapsedPlayTimeMillis
             }
         }
     }
@@ -68,6 +72,7 @@ class DataStoreJigsawProgressStore(
             boardPiecePositions = progressPayload.boardPiecePositions,
             pieceLinks = progressPayload.pieceLinks,
             pieceOrder = progressPayload.pieceOrder,
+            elapsedPlayTimeMillis = preferences[elapsedKey(imageId, pieceCount)] ?: 0L,
             updatedAtEpochMillis = updatedAt,
         )
     }
@@ -77,6 +82,7 @@ class DataStoreJigsawProgressStore(
             preferences[progressKey(progress.imageId, progress.pieceCount)] =
                 encodeProgressPayload(progress)
             preferences[updatedKey(progress.imageId, progress.pieceCount)] = progress.updatedAtEpochMillis
+            preferences[elapsedKey(progress.imageId, progress.pieceCount)] = progress.elapsedPlayTimeMillis
         }
     }
 
@@ -84,6 +90,18 @@ class DataStoreJigsawProgressStore(
         dataStore.edit { preferences ->
             preferences.remove(progressKey(imageId, pieceCount))
             preferences.remove(updatedKey(imageId, pieceCount))
+            preferences.remove(elapsedKey(imageId, pieceCount))
+        }
+    }
+
+    override suspend fun loadGameplayBackgroundId(): String? {
+        val preferences = safePreferences().first()
+        return preferences[gameplayBackgroundKey()]
+    }
+
+    override suspend fun saveGameplayBackgroundId(backgroundId: String) {
+        dataStore.edit { preferences ->
+            preferences[gameplayBackgroundKey()] = backgroundId
         }
     }
 
@@ -111,6 +129,12 @@ private fun progressKey(imageId: String, pieceCount: Int): Preferences.Key<Strin
 private fun updatedKey(imageId: String, pieceCount: Int): Preferences.Key<Long> =
     longPreferencesKey("$UPDATED_PREFIX$imageId:$pieceCount")
 
+private fun elapsedKey(imageId: String, pieceCount: Int): Preferences.Key<Long> =
+    longPreferencesKey("$ELAPSED_PREFIX$imageId:$pieceCount")
+
+private fun gameplayBackgroundKey(): Preferences.Key<String> =
+    stringPreferencesKey(GAMEPLAY_BACKGROUND_KEY)
+
 internal data class ProgressPayload(
     val placedPieceIds: Set<Int>,
     val boardPiecePositions: List<SavedBoardPiecePosition>,
@@ -123,6 +147,7 @@ internal data class StoredProgressRecord(
     val pieceCount: Int,
     val payload: String,
     val updatedAtEpochMillis: Long,
+    val elapsedPlayTimeMillis: Long = 0L,
 )
 
 internal fun encodeProgressPayloadForTest(progress: JigsawProgress): String = encodeProgressPayload(progress)
@@ -266,6 +291,7 @@ private fun Preferences.asStoredProgressRecords(): List<StoredProgressRecord> = 
             pieceCount = pieceCount,
             payload = value,
             updatedAtEpochMillis = updatedAt,
+            elapsedPlayTimeMillis = this[elapsedKey(imageId, pieceCount)] ?: 0L,
         )
     }
 

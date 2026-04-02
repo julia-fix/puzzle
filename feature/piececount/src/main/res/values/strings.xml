@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="piececount_title">Choose difficulty</string>
+    <string name="piececount_title">Difficulty</string>
     <string name="piececount_pieces_label">pieces</string>
+    <string name="piececount_delete">Delete</string>
+    <string name="piececount_delete_dialog_title">Delete uploaded puzzle?</string>
+    <string name="piececount_delete_dialog_message">This uploaded puzzle and all saved progress for it will be removed.</string>
+    <string name="piececount_delete_confirm">Delete</string>
+    <string name="piececount_cancel">Cancel</string>
 </resources>
